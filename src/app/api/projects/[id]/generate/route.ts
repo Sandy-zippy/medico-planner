@@ -46,6 +46,8 @@ export async function POST(
     city: typedProject.city,
     area_sqft: typedProject.area_sqft,
     rooms_json: typedProject.rooms_json ?? [],
+    existing_space: typedProject.existing_space ?? true,
+    address: typedProject.address ?? '',
   });
 
   // Insert generation

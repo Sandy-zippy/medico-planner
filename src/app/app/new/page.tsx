@@ -93,12 +93,12 @@ export default function NewProjectPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/app" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+      <Link href="/app" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700 mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to projects
       </Link>
 
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">New Project</h1>
-      <p className="text-sm text-slate-500 mb-8">Define your clinic space requirements.</p>
+      <h1 className="text-2xl font-bold tracking-tight text-stone-900 mb-2">New Project</h1>
+      <p className="text-sm text-stone-500 mb-8">Define your clinic space requirements.</p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Clinic Type & Location */}
@@ -179,7 +179,7 @@ export default function NewProjectPage() {
                   id="existing"
                   checked={existingSpace}
                   onChange={e => setExistingSpace(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-stone-300"
                 />
                 <Label htmlFor="existing" className="font-normal">This is an existing space (renovation)</Label>
               </div>
@@ -195,24 +195,24 @@ export default function NewProjectPage() {
 
         {/* Occupancy Stats */}
         {occupancy && (
-          <Card className="bg-slate-900 text-white">
+          <Card className="bg-stone-900 text-white">
             <CardContent className="py-4">
               <div className="grid grid-cols-4 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold">{occupancy.occupancyLoad}</div>
-                  <div className="text-xs text-slate-400">Occupant Load</div>
+                  <div className="text-xs text-stone-400">Occupant Load</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{occupancy.requiredExits}</div>
-                  <div className="text-xs text-slate-400">Required Exits</div>
+                  <div className="text-xs text-stone-400">Required Exits</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{occupancy.requiredWashrooms}</div>
-                  <div className="text-xs text-slate-400">Washrooms</div>
+                  <div className="text-xs text-stone-400">Washrooms</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{occupancy.areaM2.toFixed(0)}</div>
-                  <div className="text-xs text-slate-400">Area (m&sup2;)</div>
+                  <div className="text-xs text-stone-400">Area (m&sup2;)</div>
                 </div>
               </div>
             </CardContent>
@@ -238,7 +238,7 @@ export default function NewProjectPage() {
           </CardHeader>
           <CardContent>
             {rooms.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-8">
+              <p className="text-sm text-stone-400 text-center py-8">
                 Select a clinic type to auto-populate rooms, or add rooms manually.
               </p>
             ) : (
@@ -266,10 +266,10 @@ export default function NewProjectPage() {
                         className="w-24"
                         min={0}
                       />
-                      <span className="text-xs text-slate-400">SF</span>
+                      <span className="text-xs text-stone-400">SF</span>
                     </div>
                     <Button type="button" variant="ghost" size="sm" onClick={() => removeRoom(i)}>
-                      <X className="w-4 h-4 text-slate-400" />
+                      <X className="w-4 h-4 text-stone-400" />
                     </Button>
                   </div>
                 ))}

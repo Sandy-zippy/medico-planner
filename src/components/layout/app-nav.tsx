@@ -24,19 +24,19 @@ export function AppNav({ email }: { email: string }) {
   };
 
   return (
-    <nav className="border-b border-slate-200 bg-white">
+    <nav className="border-b border-stone-200 bg-white">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/app" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-            <Building2 className="w-3.5 h-3.5 text-white" />
+          <div className="w-7 h-7 bg-stone-900 rounded-lg flex items-center justify-center">
+            <Building2 className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <span className="font-semibold tracking-tight">Medico Planner</span>
+          <span className="font-semibold tracking-tight">UNC Architect</span>
         </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 text-slate-600">
-              <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center">
+            <Button variant="ghost" size="sm" className="gap-2 text-stone-600">
+              <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center">
                 <User className="w-3.5 h-3.5" />
               </div>
               <span className="hidden sm:inline text-sm">{email}</span>

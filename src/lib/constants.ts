@@ -42,7 +42,7 @@ export const TIMELINES = [
 ] as const;
 
 export const PROJECT_STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-slate-100 text-slate-700',
+  draft: 'bg-stone-100 text-stone-700',
   in_progress: 'bg-blue-100 text-blue-700',
   completed: 'bg-green-100 text-green-700',
 };
@@ -74,4 +74,77 @@ export function getClinicLabel(clinicType: string): string {
 
 export function getClinicGroup(clinicType: string): string {
   return CLINIC_TYPES.find(c => c.value === clinicType)?.group ?? 'D';
+}
+
+// Fire code constants per province
+export const FIRE_CODE_REQUIREMENTS: Record<string, {
+  exit_corridor_rating: string;
+  suite_separation_rating: string;
+  floor_assembly_rating: string;
+  roof_assembly_rating: string;
+  max_travel_distance_m: number;
+  corridor_min_width_mm: number;
+  door_min_width_mm: number;
+  headroom_mm: number;
+}> = {
+  BC: {
+    exit_corridor_rating: '1 hr (BCBC 3.2.7)',
+    suite_separation_rating: '1 hr (BCBC 3.3.4)',
+    floor_assembly_rating: '1 hr (BCBC 3.2.2)',
+    roof_assembly_rating: '1 hr or non-combustible (BCBC 3.2.2)',
+    max_travel_distance_m: 25,
+    corridor_min_width_mm: 1100,
+    door_min_width_mm: 860,
+    headroom_mm: 2100,
+  },
+  ON: {
+    exit_corridor_rating: '1 hr (OBC 3.2.7)',
+    suite_separation_rating: '1 hr (OBC 3.3.4)',
+    floor_assembly_rating: '1 hr (OBC 3.2.2)',
+    roof_assembly_rating: '1 hr (OBC 3.2.2)',
+    max_travel_distance_m: 30,
+    corridor_min_width_mm: 1100,
+    door_min_width_mm: 860,
+    headroom_mm: 2100,
+  },
+  AB: {
+    exit_corridor_rating: '1 hr (ABC 3.2.7)',
+    suite_separation_rating: '1 hr (ABC 3.3.4)',
+    floor_assembly_rating: '1 hr (ABC 3.2.2)',
+    roof_assembly_rating: '1 hr (ABC 3.2.2)',
+    max_travel_distance_m: 25,
+    corridor_min_width_mm: 1100,
+    door_min_width_mm: 860,
+    headroom_mm: 2100,
+  },
+};
+
+// Default fire code requirements for provinces without specific overrides
+export const DEFAULT_FIRE_CODE = {
+  exit_corridor_rating: '1 hr (NBC 3.2.7)',
+  suite_separation_rating: '1 hr (NBC 3.3.4)',
+  floor_assembly_rating: '1 hr (NBC 3.2.2)',
+  roof_assembly_rating: '1 hr (NBC 3.2.2)',
+  max_travel_distance_m: 25,
+  corridor_min_width_mm: 1100,
+  door_min_width_mm: 860,
+  headroom_mm: 2100,
+};
+
+export function getFireCodeRequirements(province: string) {
+  return FIRE_CODE_REQUIREMENTS[province] ?? DEFAULT_FIRE_CODE;
+}
+
+// Occupancy group descriptions
+export const OCCUPANCY_DESCRIPTIONS: Record<string, string> = {
+  D: 'Business and Personal Services — includes medical, dental, professional offices',
+  E: 'Mercantile — includes retail, pharmacy',
+  A2: 'Assembly — includes daycare, fitness, restaurants',
+};
+
+// Construction types based on area
+export function getConstructionType(areaSqft: number, sprinklered: boolean): string {
+  if (areaSqft > 10000) return 'Type III-B (Non-combustible / Combustible, sprinklered)';
+  if (areaSqft > 5000 || sprinklered) return 'Type III-B (Combustible, sprinklered)';
+  return 'Type V-B (Combustible, unsprinklered permitted)';
 }

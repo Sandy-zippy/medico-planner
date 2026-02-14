@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldown > 0) return;
     setLoading(true);
     setError("");
 
@@ -29,23 +37,29 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      if (error.message.toLowerCase().includes("rate limit")) {
+        setError("Too many attempts. Please wait 60 seconds before trying again.");
+        setCooldown(60);
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
     } else {
       setSent(true);
+      setCooldown(60);
       setLoading(false);
     }
-  };
+  }, [email, cooldown]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-stone-900 rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="font-semibold text-xl tracking-tight">Medico Planner</span>
+            <span className="font-semibold text-xl tracking-tight">UNC Architect</span>
           </Link>
         </div>
 
@@ -62,11 +76,11 @@ export default function LoginPage() {
             {sent ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-center">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                    <Mail className="w-8 h-8 text-slate-600" />
+                  <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center">
+                    <Mail className="w-8 h-8 text-stone-600" />
                   </div>
                 </div>
-                <p className="text-sm text-center text-slate-500">
+                <p className="text-sm text-center text-stone-500">
                   Click the link in your email to sign in. If you don&apos;t see it, check your spam folder.
                 </p>
                 <Button
@@ -84,7 +98,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@clinic.ca"
+                    placeholder="you@company.ca"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -94,9 +108,11 @@ export default function LoginPage() {
                 {error && (
                   <p className="text-sm text-red-600">{error}</p>
                 )}
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading || cooldown > 0}>
                   {loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending link...</>
+                  ) : cooldown > 0 ? (
+                    `Wait ${cooldown}s`
                   ) : (
                     "Send Magic Link"
                   )}
@@ -106,7 +122,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
+        <p className="text-center text-xs text-stone-400 mt-6">
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

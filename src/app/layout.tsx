@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -8,9 +8,15 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "Medico Planner — Clinic Space Planning for Canada",
-  description: "AI-powered space planning for Canadian healthcare practices. Generate room programs, compliance checklists, and concept packages in minutes.",
+  title: "UNC Architect — Construction Documents for Canada",
+  description: "AI-powered construction document generation for Canadian architects and builders. Room schedules, compliance analysis, and concept packages in minutes.",
 };
 
 export default function RootLayout({
@@ -20,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${newsreader.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

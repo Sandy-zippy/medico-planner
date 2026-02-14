@@ -20,8 +20,8 @@ export default async function DashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Projects</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900">Projects</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {typedProjects.length === 0
               ? "Create your first project to get started"
               : `${typedProjects.length} project${typedProjects.length !== 1 ? "s" : ""}`}
@@ -37,11 +37,11 @@ export default async function DashboardPage() {
       {typedProjects.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <Building2 className="w-8 h-8 text-slate-400" />
+            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
+              <Building2 className="w-8 h-8 text-stone-400" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-1">No projects yet</h3>
-            <p className="text-sm text-slate-500 mb-6">
+            <h3 className="font-semibold text-stone-900 mb-1">No projects yet</h3>
+            <p className="text-sm text-stone-500 mb-6">
               Create a new project to start planning your clinic space.
             </p>
             <Link href="/app/new">
@@ -58,17 +58,17 @@ export default async function DashboardPage() {
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-slate-600" />
+                    <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-stone-600" />
                     </div>
                     <Badge variant="secondary" className={PROJECT_STATUS_COLORS[project.status] ?? ""}>
                       {project.status.replace("_", " ")}
                     </Badge>
                   </div>
-                  <h3 className="font-semibold text-slate-900 mb-1">
+                  <h3 className="font-semibold text-stone-900 mb-1">
                     {getClinicLabel(project.clinic_type)}
                   </h3>
-                  <div className="space-y-1 text-sm text-slate-500">
+                  <div className="space-y-1 text-sm text-stone-500">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" />
                       {project.city ? `${project.city}, ${project.province}` : project.province}

@@ -39,6 +39,17 @@ export interface OutputJSON {
   risks: RiskItem[];
   next_steps: string[];
   code_analysis: CodeAnalysis;
+  // New optional sections
+  room_schedule?: RoomScheduleEntry[];
+  detailed_code_analysis?: DetailedCodeAnalysis;
+  equipment_schedule?: EquipmentItem[];
+  finish_schedule?: FinishScheduleEntry[];
+  wall_types?: WallType[];
+  door_schedule?: DoorScheduleEntry[];
+  plumbing_legend?: PlumbingFixture[];
+  scope_of_work?: string[];
+  drawing_list?: DrawingListEntry[];
+  floor_plan?: FloorPlanGeometry;
 }
 
 export interface ProjectSummary {
@@ -58,6 +69,19 @@ export interface RoomProgramEntry {
   quantity: number;
   area_sqft: number;
   total_sqft: number;
+  notes: string;
+}
+
+export interface RoomScheduleEntry {
+  room_number: string;
+  room_name: string;
+  quantity: number;
+  area_sqft: number;
+  area_m2: number;
+  total_sqft: number;
+  total_m2: number;
+  finish_code: string;
+  equipment_refs: string[];
   notes: string;
 }
 
@@ -87,4 +111,196 @@ export interface CodeAnalysis {
   fire_rating: string;
   sprinkler_required: boolean;
   barrier_free_required: boolean;
+}
+
+// Detailed Building Code Analysis — matches real BCBC/OBC sheets
+export interface DetailedCodeAnalysis {
+  project_info: {
+    address: string;
+    permit_type: string;
+    zoning: string;
+    applicable_code: string;
+    clinic_type: string;
+  };
+  building_description: {
+    gross_area_m2: number;
+    gross_area_sqft: number;
+    num_storeys: number;
+    construction_type: string;
+    existing_or_new: string;
+  };
+  occupancy: {
+    classification: string;
+    nbc_section: string;
+    description: string;
+  };
+  fire_ratings: {
+    floor_assembly: string;
+    roof_assembly: string;
+    load_bearing: string;
+    exit_corridor: string;
+    suite_separation: string;
+  };
+  spatial_separation: {
+    north: string;
+    south: string;
+    east: string;
+    west: string;
+  };
+  occupant_load: {
+    area_m2: number;
+    factor_m2_per_person: number;
+    occupant_count: number;
+    male_count: number;
+    female_count: number;
+  };
+  washroom_calc: {
+    male_required: number;
+    female_required: number;
+    accessible_required: number;
+    male_provided: number;
+    female_provided: number;
+    accessible_provided: number;
+  };
+  exit_requirements: {
+    min_exits: number;
+    corridor_width_mm: number;
+    max_travel_distance_m: number;
+    door_min_width_mm: number;
+    headroom_mm: number;
+  };
+  accessibility: {
+    barrier_free_entrance: boolean;
+    barrier_free_path: boolean;
+    power_door_operator: boolean;
+    tactile_signage: boolean;
+    accessible_washroom: boolean;
+  };
+  interior_finishes: {
+    flame_spread_rating: string;
+    smoke_classification: string;
+  };
+  fire_protection: {
+    alarm_type: string;
+    sprinklers: string;
+    smoke_detectors: string;
+    standpipe: string;
+  };
+}
+
+// Equipment Schedule
+export interface EquipmentItem {
+  id: string;
+  name: string;
+  room: string;
+  quantity: number;
+  hot_water: boolean;
+  cold_water: boolean;
+  drain: boolean;
+  gas: boolean;
+  dedicated_circuit: boolean;
+  standard_outlet: boolean;
+  data: boolean;
+  mechanical_vent: boolean;
+  notes: string;
+}
+
+// Finish Schedule
+export interface FinishScheduleEntry {
+  room_name: string;
+  finish_code: string;
+  wall: string;
+  floor: string;
+  ceiling: string;
+  base: string;
+  countertop: string;
+  cabinet: string;
+}
+
+// Wall / Partition Types
+export interface WallType {
+  type_code: string;
+  description: string;
+  stud_size: string;
+  layers: string;
+  insulation: string;
+  fire_rating: string;
+  stc_rating: number;
+  use_locations: string[];
+}
+
+// Door Schedule
+export interface DoorScheduleEntry {
+  mark: string;
+  location: string;
+  width_mm: number;
+  height_mm: number;
+  type: string;
+  fire_rating: string;
+  hardware: string;
+  notes: string;
+}
+
+// Plumbing Legend
+export interface PlumbingFixture {
+  mark: string;
+  fixture_type: string;
+  model_reference: string;
+  hot_water: boolean;
+  cold_water: boolean;
+  drain: boolean;
+  gas: boolean;
+  notes: string;
+}
+
+// Drawing List
+export interface DrawingListEntry {
+  drawing_number: string;
+  title: string;
+  discipline: string;
+}
+
+// Floor Plan Geometry
+export interface FloorPlanGeometry {
+  envelope: { width: number; depth: number; total_area: number };
+  corridor: { x: number; y: number; width: number; depth: number };
+  rooms: FloorPlanRoom[];
+  walls: WallSegment[];
+  doors: DoorPlacement[];
+  dimensions: DimensionAnnotation[];
+}
+
+export interface FloorPlanRoom {
+  room_number: string;
+  room_name: string;
+  x: number; y: number; width: number; depth: number;
+  area_actual: number;
+  area_programmed: number;
+  finish_code: string;
+  zone: 'public' | 'clinical' | 'support' | 'staff' | 'service';
+  side: 'left' | 'right' | 'front' | 'full_width';
+}
+
+export interface WallSegment {
+  id: string;
+  x1: number; y1: number; x2: number; y2: number;
+  wall_type: string;
+  thickness_inches: number;
+}
+
+export interface DoorPlacement {
+  mark: string;
+  room_name: string;
+  x: number; y: number;
+  width_ft: number;
+  orientation: 'horizontal' | 'vertical';
+  swing: 'in' | 'out' | 'sliding';
+  swing_direction: 'left' | 'right';
+}
+
+export interface DimensionAnnotation {
+  label: string;
+  x1: number; y1: number; x2: number; y2: number;
+  offset: number;
+  type: 'overall' | 'room' | 'corridor';
 }

@@ -59,13 +59,13 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <nav className="border-b border-slate-100">
+      <nav className="border-b border-stone-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">Medico Planner</span>
+            <span className="font-semibold text-lg tracking-tight">UNC Architect</span>
           </Link>
           <Link href="/login">
             <Button size="sm">Get Started</Button>
@@ -76,10 +76,10 @@ export default function PricingPage() {
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-4">
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900 mb-4">
               Simple, transparent pricing
             </h1>
-            <p className="text-lg text-slate-500">
+            <p className="text-lg text-stone-500">
               Start free. Upgrade when you need more.
             </p>
           </div>
@@ -88,10 +88,10 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`relative ${plan.popular ? "border-slate-900 shadow-lg" : ""}`}
+                className={`relative ${plan.popular ? "border-stone-900 shadow-lg" : ""}`}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900">
+                  <Badge className="absolute -top-3 left-1/2 -transtone-x-1/2 bg-stone-900">
                     Most Popular
                   </Badge>
                 )}
@@ -99,8 +99,8 @@ export default function PricingPage() {
                   <CardTitle className="text-lg">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="pt-4">
-                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                    <span className="text-slate-500">{plan.period}</span>
+                    <span className="text-4xl font-bold text-stone-900">{plan.price}</span>
+                    <span className="text-stone-500">{plan.period}</span>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -127,9 +127,9 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-slate-400">
-          &copy; 2026 Medico Planner. All rights reserved.
+      <footer className="border-t border-stone-100 py-8">
+        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-stone-400">
+          &copy; 2026 UNC Architect. All rights reserved.
         </div>
       </footer>
     </div>
