@@ -43,6 +43,13 @@ export async function updateSession(request: NextRequest) {
   //   return NextResponse.redirect(url);
   // }
 
+  // DEV MODE: skip auth, send everyone straight to /app
+  if (!user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/app';
+    return NextResponse.redirect(url);
+  }
+
   // Redirect logged-in users from login or landing to dashboard
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/')) {
     const url = request.nextUrl.clone();

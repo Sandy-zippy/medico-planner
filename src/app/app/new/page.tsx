@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,14 +58,11 @@ export default function NewProjectPage() {
     if (!clinicType || !province || !areaSqft || !budgetRange || !timeline) return;
 
     setLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
 
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({
-        user_id: user.id,
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         clinic_type: clinicType,
         province,
         city,
@@ -78,16 +74,16 @@ export default function NewProjectPage() {
         existing_space: existingSpace,
         address,
         status: "draft",
-      })
-      .select()
-      .single();
+      }),
+    });
 
-    if (error) {
-      console.error(error);
+    if (!res.ok) {
+      console.error(await res.text());
       setLoading(false);
       return;
     }
 
+    const data = await res.json();
     router.push(`/app/${data.id}`);
   };
 
