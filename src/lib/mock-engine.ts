@@ -9,6 +9,7 @@ import {
   getFireCodeRequirements, OCCUPANCY_DESCRIPTIONS, getConstructionType,
 } from './constants';
 import { generateFloorPlanLayout } from './floor-plan-engine';
+import { generateScene3D } from './scene-3d-engine';
 import { getDefaultRooms } from './room-templates';
 import { getEquipmentForClinicType } from './data/equipment-database';
 import { getFinishSchedule } from './data/finish-specs';
@@ -224,7 +225,7 @@ function getRoomNote(roomName: string, clinicType: string): string {
 
 // ─── New generator functions ───────────────────────────────
 
-function generateRoomSchedule(rooms: RoomConfig[], clinicType: string): RoomScheduleEntry[] {
+export function generateRoomSchedule(rooms: RoomConfig[], clinicType: string): RoomScheduleEntry[] {
   const equipmentDb = getEquipmentForClinicType(clinicType);
   let roomCounter = 100;
 
@@ -256,7 +257,7 @@ function generateRoomSchedule(rooms: RoomConfig[], clinicType: string): RoomSche
   });
 }
 
-function getFinishCodeForRoom(roomName: string, clinicType: string): string {
+export function getFinishCodeForRoom(roomName: string, clinicType: string): string {
   const map: Record<string, Record<string, string>> = {
     dental: { 'Reception / Waiting': 'F1', 'Operatory': 'F2', 'Sterilization': 'F3', 'X-Ray / Pano Room': 'F2', "Doctor's Office": 'F6', 'Staff Room': 'F5', 'Accessible Washroom': 'F4', 'Storage / Mechanical': 'F7' },
     optometry: { 'Reception / Waiting': 'F1', 'Pre-Test Room': 'F2', 'Exam Room': 'F2', 'Optical Dispensary': 'F1', 'Contact Lens Room': 'F2', "Doctor's Office": 'F6', 'Staff Room': 'F5', 'Accessible Washroom': 'F4', 'Storage': 'F7' },
@@ -268,7 +269,7 @@ function getFinishCodeForRoom(roomName: string, clinicType: string): string {
   return map[clinicType]?.[roomName] ?? 'F1';
 }
 
-function generateDetailedCodeAnalysis(config: {
+export function generateDetailedCodeAnalysis(config: {
   province: string;
   city: string;
   clinic_type: string;
@@ -367,11 +368,11 @@ function generateDetailedCodeAnalysis(config: {
   };
 }
 
-function generateEquipmentSchedule(clinicType: string): EquipmentItem[] {
+export function generateEquipmentSchedule(clinicType: string): EquipmentItem[] {
   return getEquipmentForClinicType(clinicType);
 }
 
-function generateFinishSchedule(clinicType: string, rooms: RoomConfig[]): FinishScheduleEntry[] {
+export function generateFinishSchedule(clinicType: string, rooms: RoomConfig[]): FinishScheduleEntry[] {
   // Deduplicate room names for finish schedule
   const uniqueRooms = rooms.reduce<{ name: string }[]>((acc, r) => {
     if (!acc.find(x => x.name === r.name)) acc.push({ name: r.name });
@@ -380,11 +381,11 @@ function generateFinishSchedule(clinicType: string, rooms: RoomConfig[]): Finish
   return getFinishSchedule(clinicType, uniqueRooms);
 }
 
-function generateWallTypes(clinicType: string): WallType[] {
+export function generateWallTypes(clinicType: string): WallType[] {
   return getWallTypesForClinic(clinicType);
 }
 
-function generateDoorSchedule(rooms: RoomConfig[], clinicType: string): DoorScheduleEntry[] {
+export function generateDoorSchedule(rooms: RoomConfig[], clinicType: string): DoorScheduleEntry[] {
   const doors: DoorScheduleEntry[] = [];
   let doorNum = 100;
 
@@ -454,7 +455,7 @@ function generateDoorSchedule(rooms: RoomConfig[], clinicType: string): DoorSche
   return doors;
 }
 
-function generatePlumbingLegend(clinicType: string): PlumbingFixture[] {
+export function generatePlumbingLegend(clinicType: string): PlumbingFixture[] {
   const fixtures: PlumbingFixture[] = [
     { mark: 'PF-1', fixture_type: 'Lavatory — Wall-Mount', model_reference: 'Kohler K-2005 or eq.', hot_water: true, cold_water: true, drain: true, gas: false, notes: 'Hands-free sensor faucet in clinical areas' },
     { mark: 'PF-2', fixture_type: 'Water Closet — Floor-Mount', model_reference: 'Kohler K-3999 or eq.', hot_water: false, cold_water: true, drain: true, gas: false, notes: '4.8L low-flow. Accessible units: elongated bowl, side transfer' },
@@ -493,7 +494,7 @@ function generatePlumbingLegend(clinicType: string): PlumbingFixture[] {
   return fixtures;
 }
 
-function generateScopeOfWork(clinicType: string, existingSpace: boolean): string[] {
+export function generateScopeOfWork(clinicType: string, existingSpace: boolean): string[] {
   const scope: string[] = [];
 
   if (existingSpace) {
@@ -544,7 +545,7 @@ function generateScopeOfWork(clinicType: string, existingSpace: boolean): string
   return scope;
 }
 
-function generateDrawingListOutput(clinicType: string): DrawingListEntry[] {
+export function generateDrawingListOutput(clinicType: string): DrawingListEntry[] {
   return getDrawingList(clinicType);
 }
 
@@ -639,6 +640,11 @@ export function generateMockOutput(config: {
       output.room_schedule!, adjacencies, output.door_schedule!,
       output.wall_types!, config.area_sqft, config.clinic_type
     );
+
+    // Generate 3D scene from floor plan
+    if (output.floor_plan) {
+      output.scene_3d = generateScene3D(output.floor_plan);
+    }
   }
 
   return output;

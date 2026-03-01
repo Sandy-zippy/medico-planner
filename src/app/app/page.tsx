@@ -3,18 +3,33 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building2, MapPin, Maximize2, Calendar } from "lucide-react";
+import { Plus, Building2, MapPin, Maximize2 } from "lucide-react";
 import { PROJECT_STATUS_COLORS, getClinicLabel } from "@/lib/constants";
-import type { Project } from "@/types";
+import { FloorPlanThumbnail } from "@/components/project/floor-plan-thumbnail";
+import type { Project, Generation, FloorPlanGeometry } from "@/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+
+  // Fetch projects with their latest completed generation
   const { data: projects } = await supabase
     .from("projects")
-    .select("*")
+    .select("*, generations(id, version, output_json, status)")
     .order("created_at", { ascending: false });
 
-  const typedProjects = (projects ?? []) as Project[];
+  const typedProjects = (projects ?? []) as (Project & {
+    generations: Pick<Generation, "id" | "version" | "output_json" | "status">[];
+  })[];
+
+  // Extract latest completed generation's floor plan per project
+  const projectsWithThumbnails = typedProjects.map(p => {
+    const completedGens = (p.generations ?? [])
+      .filter(g => g.status === "completed" || !g.status)
+      .sort((a, b) => b.version - a.version);
+    const latestGen = completedGens[0];
+    const floorPlan: FloorPlanGeometry | undefined = latestGen?.output_json?.floor_plan;
+    return { ...p, floorPlan, latestVersion: latestGen?.version };
+  });
 
   return (
     <div>
@@ -53,33 +68,43 @@ export default async function DashboardPage() {
         </Card>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {typedProjects.map((project) => (
+          {projectsWithThumbnails.map((project) => (
             <Link key={project.id} href={`/app/${project.id}`}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-stone-600" />
+              <Card className="hover:shadow-md transition-shadow cursor-pointer h-full overflow-hidden">
+                {/* Thumbnail */}
+                <div className="aspect-[16/10] bg-stone-50 border-b border-stone-100 overflow-hidden">
+                  {project.floorPlan ? (
+                    <FloorPlanThumbnail floorPlan={project.floorPlan} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Building2 className="w-8 h-8 text-stone-200" />
                     </div>
-                    <Badge variant="secondary" className={PROJECT_STATUS_COLORS[project.status] ?? ""}>
-                      {project.status.replace("_", " ")}
-                    </Badge>
-                  </div>
-                  <h3 className="font-semibold text-stone-900 mb-1">
-                    {getClinicLabel(project.clinic_type)}
-                  </h3>
-                  <div className="space-y-1 text-sm text-stone-500">
+                  )}
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-stone-900 text-sm">
+                      {getClinicLabel(project.clinic_type)}
+                    </h3>
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5" />
+                      {project.latestVersion && (
+                        <Badge variant="secondary" className="text-[10px] bg-stone-100 text-stone-500">
+                          v{project.latestVersion}
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className={`text-[10px] ${PROJECT_STATUS_COLORS[project.status] ?? ""}`}>
+                        {project.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="space-y-0.5 text-xs text-stone-500">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3" />
                       {project.city ? `${project.city}, ${project.province}` : project.province}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Maximize2 className="w-3.5 h-3.5" />
+                      <Maximize2 className="w-3 h-3" />
                       {project.area_sqft.toLocaleString()} SF
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {new Date(project.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 </CardContent>

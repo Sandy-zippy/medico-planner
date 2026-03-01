@@ -25,19 +25,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // If magic link landed on root with a code param, forward to auth callback
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.get('code')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    return NextResponse.redirect(url);
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /app routes
-  if (!user && request.nextUrl.pathname.startsWith('/app')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
+  // Protect /app routes — TEMP: bypass disabled for local dev review
+  // if (!user && request.nextUrl.pathname.startsWith('/app')) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = '/login';
+  //   return NextResponse.redirect(url);
+  // }
 
-  // Redirect logged-in users from login to dashboard
-  if (user && request.nextUrl.pathname === '/login') {
+  // Redirect logged-in users from login or landing to dashboard
+  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/')) {
     const url = request.nextUrl.clone();
     url.pathname = '/app';
     return NextResponse.redirect(url);

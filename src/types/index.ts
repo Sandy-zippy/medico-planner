@@ -28,6 +28,8 @@ export interface Generation {
   project_id: string;
   version: number;
   output_json: OutputJSON;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  error_message?: string;
   created_at: string;
 }
 
@@ -50,6 +52,7 @@ export interface OutputJSON {
   scope_of_work?: string[];
   drawing_list?: DrawingListEntry[];
   floor_plan?: FloorPlanGeometry;
+  scene_3d?: Scene3DData;
 }
 
 export interface ProjectSummary {
@@ -303,4 +306,66 @@ export interface DimensionAnnotation {
   x1: number; y1: number; x2: number; y2: number;
   offset: number;
   type: 'overall' | 'room' | 'corridor';
+}
+
+// ── 3D Scene Data ─────────────────────────────────────────
+
+export interface Scene3DData {
+  walls: Wall3D[];
+  floors: Floor3D[];
+  doors: Door3D[];
+  labels: Room3DLabel[];
+  camera: {
+    position: [number, number, number];
+    target: [number, number, number];
+  };
+  bounds: {
+    width: number; // meters
+    depth: number; // meters
+  };
+}
+
+export interface Wall3D {
+  id: string;
+  position: [number, number, number]; // center x, y, z
+  size: [number, number, number]; // width, height, depth
+  color: string;
+  wall_type: string;
+}
+
+export interface Floor3D {
+  room_number: string;
+  room_name: string;
+  position: [number, number, number];
+  size: [number, number]; // width, depth
+  color: string;
+  finish_code: string;
+}
+
+export interface Door3D {
+  mark: string;
+  position: [number, number, number];
+  size: [number, number]; // width, height
+  rotation: number; // radians around Y axis
+}
+
+export interface Room3DLabel {
+  room_number: string;
+  room_name: string;
+  position: [number, number, number];
+}
+
+// ── AI Generation Result ──────────────────────────────────
+
+export interface AIGenerationResult {
+  room_program: RoomProgramEntry[];
+  adjacencies: Adjacency[];
+  compliance_checklist: ComplianceItem[];
+  risks: RiskItem[];
+  code_analysis: CodeAnalysis;
+  layout_hints?: {
+    corridor_type: 'single' | 'double' | 'L' | 'loop';
+    zone_placement: string;
+    flow_notes: string;
+  };
 }
