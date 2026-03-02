@@ -22,9 +22,23 @@ const priorityColors: Record<string, string> = {
 export function OutputRenderer({ generation }: { generation: Generation }) {
   const output = generation.output_json;
 
-  const complianceMet = output.compliance_checklist.filter(c => c.status === "met").length;
-  const complianceTotal = output.compliance_checklist.length;
-  const highRisks = output.risks.filter(r => r.severity === "high").length;
+  // Show skeleton for pending/processing generations
+  if (generation.status === "pending" || generation.status === "processing") {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-stone-100 rounded w-2/3" />
+        <div className="h-64 bg-stone-100 rounded" />
+        <div className="h-32 bg-stone-100 rounded" />
+      </div>
+    );
+  }
+
+  const compliance = output.compliance_checklist ?? [];
+  const risks = output.risks ?? [];
+  const adjacencies = output.adjacencies ?? [];
+  const complianceMet = compliance.filter(c => c.status === "met").length;
+  const complianceTotal = compliance.length;
+  const highRisks = risks.filter(r => r.severity === "high").length;
 
   return (
     <div className="space-y-6">
@@ -63,6 +77,11 @@ export function OutputRenderer({ generation }: { generation: Generation }) {
               {highRisks} high risk
             </Badge>
           )}
+          {output.cost_estimate && (
+            <Badge variant="secondary" className="text-[10px] bg-emerald-50 text-emerald-700">
+              ${Math.round(output.cost_estimate.total / 1000)}K est.
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -70,13 +89,13 @@ export function OutputRenderer({ generation }: { generation: Generation }) {
       <DesignCanvas output={output} />
 
       {/* Adjacencies — compact visual */}
-      {output.adjacencies.length > 0 && (
+      {adjacencies.length > 0 && (
         <div className="px-1">
           <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
             Spatial Adjacencies
           </h3>
           <div className="flex flex-wrap gap-2">
-            {output.adjacencies.map((adj, i) => (
+            {adjacencies.map((adj, i) => (
               <div
                 key={i}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-stone-50 border border-stone-100 rounded-full text-xs"
@@ -94,13 +113,13 @@ export function OutputRenderer({ generation }: { generation: Generation }) {
       )}
 
       {/* Risks — compact cards */}
-      {output.risks.length > 0 && (
+      {risks.length > 0 && (
         <div className="px-1">
           <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
             Risk Assessment
           </h3>
           <div className="grid sm:grid-cols-2 gap-2">
-            {output.risks.map((risk, i) => (
+            {risks.map((risk, i) => (
               <div key={i} className="p-3 rounded-lg border border-stone-100 bg-white">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Badge variant="secondary" className={`text-[10px] ${severityColors[risk.severity]}`}>

@@ -10,6 +10,7 @@ import {
 } from './constants';
 import { generateFloorPlanLayout } from './floor-plan-engine';
 import { generateScene3D } from './scene-3d-engine';
+import { generateCostEstimate } from './cost-engine';
 import { getDefaultRooms } from './room-templates';
 import { getEquipmentForClinicType } from './data/equipment-database';
 import { getFinishSchedule } from './data/finish-specs';
@@ -645,6 +646,9 @@ export function generateMockOutput(config: {
     if (output.floor_plan) {
       output.scene_3d = generateScene3D(output.floor_plan);
     }
+
+    // Generate cost estimate
+    output.cost_estimate = generateCostEstimate(output.room_schedule!, config.province);
   }
 
   return output;

@@ -53,6 +53,7 @@ export interface OutputJSON {
   drawing_list?: DrawingListEntry[];
   floor_plan?: FloorPlanGeometry;
   scene_3d?: Scene3DData;
+  cost_estimate?: CostEstimate;
 }
 
 export interface ProjectSummary {
@@ -368,4 +369,26 @@ export interface AIGenerationResult {
     zone_placement: string;
     flow_notes: string;
   };
+}
+
+// ── Cost Estimation ──────────────────────────────────────
+
+export interface CostLineItem {
+  category: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  unit_cost: number;
+  total: number;
+}
+
+export interface CostEstimate {
+  line_items: CostLineItem[];
+  subtotal: number;
+  contingency_percent: number;
+  contingency_amount: number;
+  total: number;
+  cost_per_sqft: number;
+  currency: string;
+  disclaimer: string;
 }

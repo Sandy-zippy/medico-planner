@@ -81,21 +81,49 @@ export async function POST(
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  // DEV MODE: use service client when no authenticated user
-  const db = user ? supabase : createServiceClient();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  const query = db.from('projects').select('*').eq('id', id);
-  if (user) query.eq('user_id', user.id);
+  const query = supabase.from('projects').select('*').eq('id', id).eq('user_id', user.id);
   const { data: project } = await query.single();
 
   if (!project) {
     return NextResponse.json({ error: 'Project not found' }, { status: 404 });
   }
 
+  // ── Tier gating ──
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('plan, status')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single();
+
+  const plan = subscription?.plan ?? 'starter';
+
+  // Starter: max 3 generations total
+  if (plan === 'starter') {
+    const { count } = await supabase
+      .from('generations')
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', id);
+
+    if ((count ?? 0) >= 3) {
+      return NextResponse.json(
+        { error: 'Generation limit reached. Upgrade to Professional for unlimited generations.', upgrade_required: true },
+        { status: 402 }
+      );
+    }
+  }
+
+  // Starter users get mock engine only, Professional gets AI
+  const useAI = plan === 'professional' && isAIEnabled();
+
   const typedProject = project as Project;
 
   // Get current max version
-  const { data: latestGen } = await db
+  const { data: latestGen } = await supabase
     .from('generations')
     .select('version')
     .eq('project_id', id)
@@ -105,12 +133,10 @@ export async function POST(
 
   const nextVersion = (latestGen?.version ?? 0) + 1;
 
-  const useAI = isAIEnabled();
-
   if (useAI) {
     // ── Async AI pipeline ──
     // Insert generation as pending, return immediately, process in background
-    const { data: generation, error } = await db
+    const { data: generation, error } = await supabase
       .from('generations')
       .insert({
         project_id: id,
@@ -145,7 +171,7 @@ export async function POST(
       address: typedProject.address ?? '',
     });
 
-    const { data: generation, error } = await db
+    const { data: generation, error } = await supabase
       .from('generations')
       .insert({
         project_id: id,
@@ -161,7 +187,7 @@ export async function POST(
     }
 
     // Update project status
-    await db
+    await supabase
       .from('projects')
       .update({ status: 'in_progress', updated_at: new Date().toISOString() })
       .eq('id', id);

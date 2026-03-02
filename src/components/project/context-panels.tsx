@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, LayoutList, Cpu, Palette, DoorOpen, Shield, FileCode, ClipboardList } from "lucide-react";
+import { ChevronDown, LayoutList, Cpu, Palette, DoorOpen, Shield, FileCode, ClipboardList, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { OutputJSON } from "@/types";
 
@@ -11,6 +11,7 @@ import { ComplianceTab } from "./tabs/compliance-tab";
 import { CodeAnalysisTab } from "./tabs/code-analysis-tab";
 import { ScopeTab } from "./tabs/scope-tab";
 import { FinishesTab } from "./tabs/finishes-tab";
+import { CostEstimateTab } from "./tabs/cost-estimate-tab";
 
 interface PanelConfig {
   id: string;
@@ -74,7 +75,9 @@ export function ContextPanels({ output }: { output: OutputJSON }) {
   const hasDetailedCode = !!output.detailed_code_analysis;
   const hasScope = (output.scope_of_work?.length ?? 0) > 0 || (output.drawing_list?.length ?? 0) > 0;
   const hasDoors = (output.door_schedule?.length ?? 0) > 0;
-  const actionItems = output.compliance_checklist.filter(c => c.status === "action_required").length;
+  const complianceChecklist = output.compliance_checklist ?? [];
+  const actionItems = complianceChecklist.filter(c => c.status === "action_required").length;
+  const hasCost = !!output.cost_estimate;
 
   const panels: PanelConfig[] = [
     {
@@ -118,11 +121,21 @@ export function ContextPanels({ output }: { output: OutputJSON }) {
       id: "compliance",
       label: "Compliance Checklist",
       icon: Shield,
-      badge: actionItems > 0 ? `${actionItems} action` : `${output.compliance_checklist.length} items`,
+      badge: actionItems > 0 ? `${actionItems} action` : `${complianceChecklist.length} items`,
       visible: true,
       render: () => (
-        <ComplianceTab items={output.compliance_checklist} codeAnalysis={output.code_analysis} />
+        <ComplianceTab items={complianceChecklist} codeAnalysis={output.code_analysis} />
       ),
+    },
+    {
+      id: "cost",
+      label: "Cost Estimate",
+      icon: DollarSign,
+      badge: output.cost_estimate
+        ? `$${Math.round(output.cost_estimate.total / 1000)}K`
+        : "N/A",
+      visible: hasCost,
+      render: () => <CostEstimateTab estimate={output.cost_estimate!} />,
     },
     {
       id: "scope",

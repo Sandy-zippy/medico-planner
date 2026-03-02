@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Shield, Zap, FileText, ArrowRight, CheckCircle2, MapPin } from "lucide-react";
+import { Building2, Shield, Zap, FileText, ArrowRight, DollarSign, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const features = [
@@ -29,9 +29,9 @@ const features = [
     description: "Built for Canada. Tailored code references for Ontario, BC, Alberta, Quebec, and all provinces.",
   },
   {
-    icon: CheckCircle2,
-    title: "Upload & Analyze",
-    description: "Upload existing floor plans and let UNC Architect analyze your current space.",
+    icon: DollarSign,
+    title: "Cost Estimation",
+    description: "Province-specific construction cost estimates with line items, contingencies, and per-square-foot breakdowns.",
   },
 ];
 
@@ -45,7 +45,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
               <Building2 className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">UNC Architect</span>
+            <span className="font-semibold text-lg tracking-tight">Archonek</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/pricing" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
@@ -69,13 +69,12 @@ export default function LandingPage() {
             Built for Canadian construction professionals
           </div>
           <h1 className="font-serif text-5xl sm:text-6xl font-bold tracking-tight text-stone-900 leading-[1.1] mb-6">
-            Design-ready construction<br />
-            documents, <span className="text-stone-400 italic">instantly.</span>
+            Code-compliant clinic concept<br />
+            packages, <span className="text-stone-400 italic">instantly.</span>
           </h1>
           <p className="text-lg text-stone-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            From room schedules to code compliance — generate professional concept packages
-            for clinics, offices, restaurants, and commercial spaces.
-            Tailored to Canadian building codes.
+            From room schedules to construction cost estimates — generate professional concept packages
+            for dental, medical, veterinary, and optometry clinics across Canada.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link href="/login">
@@ -95,13 +94,15 @@ export default function LandingPage() {
       {/* Social proof strip */}
       <section className="border-y border-stone-100 py-8">
         <div className="max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-sm text-stone-400">
-          <span>12 Space Types</span>
+          <span>6 Clinic Types</span>
           <span className="hidden sm:block w-1 h-1 bg-stone-300 rounded-full" />
           <span>10 Provinces</span>
           <span className="hidden sm:block w-1 h-1 bg-stone-300 rounded-full" />
           <span>NBC / OBC / BCBC</span>
           <span className="hidden sm:block w-1 h-1 bg-stone-300 rounded-full" />
-          <span>Instant Output</span>
+          <span>Cost Estimates</span>
+          <span className="hidden sm:block w-1 h-1 bg-stone-300 rounded-full" />
+          <span>AI-Powered</span>
         </div>
       </section>
 
@@ -113,7 +114,7 @@ export default function LandingPage() {
               Everything you need to document your project
             </h2>
             <p className="text-stone-500 max-w-xl mx-auto">
-              Professional-grade construction document tools built specifically for Canadian architects and builders.
+              Professional-grade construction document tools built specifically for Canadian healthcare design professionals.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -140,7 +141,7 @@ export default function LandingPage() {
             {[
               { step: '01', title: 'Define Your Project', desc: 'Select space type, enter area, choose province, and customize your room requirements.' },
               { step: '02', title: 'Upload Plans (Optional)', desc: 'Upload existing floor plans or lease drawings for analysis and reference.' },
-              { step: '03', title: 'Generate & Iterate', desc: 'Get a full concept package — room schedule, compliance checklist, adjacencies, and risk analysis.' },
+              { step: '03', title: 'Generate & Iterate', desc: 'Get a full concept package — floor plans, cost estimates, and MEP layouts with compliance analysis.' },
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="text-4xl font-bold text-stone-200 mb-4">{item.step}</div>
@@ -159,7 +160,7 @@ export default function LandingPage() {
             Ready to start your next project?
           </h2>
           <p className="text-stone-500 mb-8">
-            Start with a free project. No credit card required.
+            Start with a free clinic project. No credit card required.
           </p>
           <Link href="/login">
             <Button size="lg" className="text-base px-8 h-12">
@@ -176,9 +177,9 @@ export default function LandingPage() {
             <div className="w-6 h-6 bg-stone-900 rounded flex items-center justify-center">
               <Building2 className="w-3 h-3 text-amber-400" />
             </div>
-            <span>UNC Architect</span>
+            <span>Archonek</span>
           </div>
-          <span>&copy; 2026 UNC Architect. All rights reserved.</span>
+          <span>&copy; 2026 Archonek. All rights reserved.</span>
         </div>
       </footer>
     </div>

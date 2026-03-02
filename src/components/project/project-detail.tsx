@@ -85,7 +85,17 @@ export function ProjectDetail({
       const res = await fetch(`/api/projects/${project.id}/generate`, {
         method: "POST",
       });
-      if (!res.ok) throw new Error("Generation failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        if (res.status === 402 && errorData?.upgrade_required) {
+          stopProgressCycle();
+          setGenerating(false);
+          setGenerationError("You've reached the free tier limit of 3 generations. Upgrade to Professional for unlimited AI-powered generations.");
+          toast.error("Generation limit reached");
+          return;
+        }
+        throw new Error(errorData?.error || "Generation failed");
+      }
       const gen = await res.json();
 
       if (gen.status === "pending" || gen.status === "processing") {
@@ -108,7 +118,21 @@ export function ProjectDetail({
   };
 
   const pollForCompletion = (genId: string, version: number) => {
+    let pollCount = 0;
+    const MAX_POLLS = 60; // 60 polls × 2s = 2 minutes max
+
     pollRef.current = setInterval(async () => {
+      pollCount++;
+
+      if (pollCount > MAX_POLLS) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        stopProgressCycle();
+        setGenerating(false);
+        setGenerationError("Generation timed out after 2 minutes. Please try again.");
+        toast.error("Generation timed out");
+        return;
+      }
+
       try {
         const res = await fetch(
           `/api/projects/${project.id}/generations/${genId}`
@@ -196,14 +220,14 @@ export function ProjectDetail({
         <Link href="/app" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
           <ArrowLeft className="w-4 h-4" /> Projects
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <ChevronLeft className="w-3.5 h-3.5 mr-1" /> : <ChevronRight className="w-3.5 h-3.5 mr-1" />}
-            {sidebarOpen ? "Hide" : "Details"}
+            <span className="hidden sm:inline">{sidebarOpen ? "Hide" : "Details"}</span>
           </Button>
           <Button size="sm" onClick={handleGenerate} disabled={generating}>
             {generating ? (
@@ -276,10 +300,10 @@ export function ProjectDetail({
       )}
 
       {/* Main layout */}
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Collapsible sidebar */}
         {sidebarOpen && (
-          <aside className="w-60 shrink-0 space-y-4">
+          <aside className="hidden lg:block w-60 shrink-0 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-xs font-medium text-stone-500">Project Info</CardTitle>

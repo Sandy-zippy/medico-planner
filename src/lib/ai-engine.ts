@@ -23,6 +23,7 @@ import {
 } from './mock-engine';
 import { generateFloorPlanLayout } from './floor-plan-engine';
 import { generateScene3D } from './scene-3d-engine';
+import { generateCostEstimate } from './cost-engine';
 import { calculateOccupancy, getProvinceCode, getClinicLabel, getClinicGroup } from './constants';
 import { getDefaultRooms } from './room-templates';
 
@@ -153,6 +154,9 @@ async function generateWithAIPipeline(config: GenerationConfig): Promise<OutputJ
     if (output.floor_plan) {
       output.scene_3d = generateScene3D(output.floor_plan);
     }
+
+    // ── Phase 5: Cost Estimation ──
+    output.cost_estimate = generateCostEstimate(output.room_schedule!, config.province);
   }
 
   return output;

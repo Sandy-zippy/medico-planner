@@ -6,8 +6,5 @@ ALTER TABLE public.generations
 -- Index for polling by project + status
 CREATE INDEX idx_generations_status ON public.generations(project_id, status);
 
--- Allow service role to insert/update generations (for background pipeline)
-CREATE POLICY "Service role can manage generations"
-  ON public.generations FOR ALL
-  USING (true)
-  WITH CHECK (true);
+-- Service role bypasses RLS by default — no permissive policy needed.
+-- Row-level access is enforced by the authenticated user's policies on the generations table.
