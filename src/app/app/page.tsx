@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +12,13 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // DEV MODE: use service client (bypasses RLS) when no authenticated user
-  const db = user ? supabase : createServiceClient();
+  if (!user) {
+    const { redirect } = await import("next/navigation");
+    redirect("/login");
+  }
 
   // Fetch projects with their latest completed generation
-  const { data: projects } = await db
+  const { data: projects } = await supabase
     .from("projects")
     .select("*, generations(id, version, output_json, status)")
     .order("created_at", { ascending: false });

@@ -36,17 +36,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /app routes — TEMP: bypass disabled for local dev review
-  // if (!user && request.nextUrl.pathname.startsWith('/app')) {
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = '/login';
-  //   return NextResponse.redirect(url);
-  // }
-
-  // DEV MODE: skip auth, send everyone straight to /app
-  if (!user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/')) {
+  // Protect /app routes — redirect unauthenticated users to login
+  if (!user && request.nextUrl.pathname.startsWith('/app')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/app';
+    url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 

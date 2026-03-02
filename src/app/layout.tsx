@@ -15,8 +15,8 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "UNC Architect — Construction Documents for Canada",
-  description: "AI-powered construction document generation for Canadian architects and builders. Room schedules, compliance analysis, and concept packages in minutes.",
+  title: "Archonek — Code-Compliant Clinic Concept Packages",
+  description: "AI-powered clinic concept packages for Canadian healthcare professionals. Room schedules, cost estimates, compliance analysis, and floor plans in minutes.",
 };
 
 export default function RootLayout({

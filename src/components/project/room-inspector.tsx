@@ -64,7 +64,7 @@ export function RoomInspector({
       .filter(Boolean);
 
     // Adjacencies involving this room
-    const adjacencies = output.adjacencies.filter(a =>
+    const adjacencies = (output.adjacencies ?? []).filter(a =>
       a.room_a.toLowerCase() === (fpRoom?.room_name ?? "").toLowerCase() ||
       a.room_b.toLowerCase() === (fpRoom?.room_name ?? "").toLowerCase()
     );

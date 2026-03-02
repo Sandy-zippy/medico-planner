@@ -10,10 +10,9 @@ export default async function AppLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // TEMP: bypass disabled for local dev review
-  // if (!user) {
-  //   redirect("/login");
-  // }
+  if (!user) {
+    redirect("/login");
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
