@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { OutputJSON, FloorPlanRoom, WallSegment, DoorPlacement, DimensionAnnotation } from "@/types";
+import type { OutputJSON, FloorPlanRoom, WallSegment, DoorPlacement, DimensionAnnotation, MEPLayout } from "@/types";
 
 // ── Palettes (exported for reuse by thumbnail + finish board) ─────
 
@@ -65,7 +65,7 @@ function getZoneFill(zone: string): string {
 
 // ── Types ──────────────────────────────────────────────────────
 
-export type OverlayMode = "finishes" | "zones" | "equipment" | null;
+export type OverlayMode = "finishes" | "zones" | "equipment" | "electrical" | "plumbing" | "hvac" | null;
 
 export interface FloorPlanSVGProps {
   output: OutputJSON;
@@ -382,6 +382,70 @@ function TitleBlock({ x, y, width, envelopeW, output }: {
   );
 }
 
+// ── MEP Symbol shapes ──────────────────────────────────────────
+
+const MEP_SHAPES: Record<string, { shape: 'circle' | 'square' | 'triangle' | 'diamond'; size: number }> = {
+  duplex_outlet: { shape: 'circle', size: 3 },
+  gfci: { shape: 'circle', size: 3.5 },
+  switch: { shape: 'square', size: 3 },
+  dedicated_circuit: { shape: 'diamond', size: 4 },
+  panel: { shape: 'square', size: 6 },
+  water_main: { shape: 'triangle', size: 5 },
+  hot_supply: { shape: 'circle', size: 3 },
+  cold_supply: { shape: 'circle', size: 3 },
+  floor_drain: { shape: 'square', size: 3 },
+  gas_valve: { shape: 'diamond', size: 3.5 },
+  supply_diffuser: { shape: 'square', size: 4 },
+  return_grille: { shape: 'square', size: 3.5 },
+  thermostat: { shape: 'circle', size: 2.5 },
+};
+
+function MEPOverlay({ mep, scale, color, runColor }: { mep: MEPLayout; scale: number; color: string; runColor: string }) {
+  return (
+    <g opacity={0.85}>
+      {/* Runs (lines) */}
+      {mep.runs.map((run, i) => (
+        <polyline
+          key={`run-${i}`}
+          points={run.points.map(p => `${p.x * scale},${p.y * scale}`).join(' ')}
+          fill="none" stroke={runColor} strokeWidth={1} strokeDasharray="4 2"
+          className="pointer-events-none"
+        />
+      ))}
+      {/* Symbols */}
+      {mep.symbols.map((sym, i) => {
+        const shape = MEP_SHAPES[sym.type] ?? { shape: 'circle' as const, size: 3 };
+        const cx = sym.x * scale;
+        const cy = sym.y * scale;
+        const s = shape.size;
+        return (
+          <g key={`sym-${i}`}>
+            {shape.shape === 'circle' && (
+              <circle cx={cx} cy={cy} r={s} fill="white" stroke={color} strokeWidth={1} />
+            )}
+            {shape.shape === 'square' && (
+              <rect x={cx - s} y={cy - s} width={s * 2} height={s * 2} fill="white" stroke={color} strokeWidth={1} />
+            )}
+            {shape.shape === 'triangle' && (
+              <polygon points={`${cx},${cy - s} ${cx - s},${cy + s} ${cx + s},${cy + s}`} fill="white" stroke={color} strokeWidth={1} />
+            )}
+            {shape.shape === 'diamond' && (
+              <polygon points={`${cx},${cy - s} ${cx + s},${cy} ${cx},${cy + s} ${cx - s},${cy}`} fill="white" stroke={color} strokeWidth={1} />
+            )}
+            {sym.label && (
+              <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+                fontSize={Math.min(5, s * 0.9)} fontWeight={600} fill={color}
+                className="pointer-events-none select-none">
+                {sym.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 // ── Main SVG Component ─────────────────────────────────────────
 
 export function FloorPlanSVG({
@@ -420,21 +484,28 @@ export function FloorPlanSVG({
         <rect x={-5} y={-5} width={fp.envelope.width * scale + 10} height={fp.envelope.depth * scale + 10} fill="url(#fp-grid)" />
         <rect x={-5} y={-5} width={fp.envelope.width * scale + 10} height={fp.envelope.depth * scale + 10} fill="url(#fp-grid5)" />
 
-        {/* Corridor */}
-        <rect
-          x={fp.corridor.x * scale} y={fp.corridor.y * scale}
-          width={fp.corridor.width * scale} height={fp.corridor.depth * scale}
-          fill={CORRIDOR_FILL} stroke="none"
-        />
-        {Array.from({ length: Math.max(1, Math.floor(fp.corridor.depth / 18)) }).map((_, i) => (
-          <text key={`corr-${i}`}
-            x={(fp.corridor.x + fp.corridor.width / 2) * scale}
-            y={(fp.corridor.y + 10 + i * 18) * scale}
-            textAnchor="middle" dominantBaseline="central"
-            fontSize={6} fontWeight={600} fill="#b8b5b0" letterSpacing={3}
-            className="pointer-events-none select-none">
-            CORRIDOR
-          </text>
+        {/* Corridor segment(s) */}
+        {(fp.corridor_segments ?? [fp.corridor]).map((seg, si) => (
+          <g key={`corr-seg-${si}`}>
+            <rect
+              x={seg.x * scale} y={seg.y * scale}
+              width={seg.width * scale} height={seg.depth * scale}
+              fill={CORRIDOR_FILL} stroke="none"
+            />
+            {Array.from({ length: Math.max(1, Math.floor(Math.max(seg.width, seg.depth) / 18)) }).map((_, i) => {
+              const isVertical = seg.depth > seg.width;
+              return (
+                <text key={`corr-${si}-${i}`}
+                  x={(seg.x + seg.width / 2) * scale}
+                  y={isVertical ? (seg.y + 10 + i * 18) * scale : (seg.y + seg.depth / 2) * scale}
+                  textAnchor="middle" dominantBaseline="central"
+                  fontSize={6} fontWeight={600} fill="#b8b5b0" letterSpacing={3}
+                  className="pointer-events-none select-none">
+                  CORRIDOR
+                </text>
+              );
+            })}
+          </g>
         ))}
 
         {/* Room fills */}
@@ -462,6 +533,17 @@ export function FloorPlanSVG({
         {fp.doors.map(door => (
           <DoorSwing key={door.mark} door={door} scale={scale} />
         ))}
+
+        {/* MEP Overlay */}
+        {overlayMode === "electrical" && output.electrical_plan && (
+          <MEPOverlay mep={output.electrical_plan} scale={scale} color="#eab308" runColor="#ca8a04" />
+        )}
+        {overlayMode === "plumbing" && output.plumbing_plan && (
+          <MEPOverlay mep={output.plumbing_plan} scale={scale} color="#3b82f6" runColor="#2563eb" />
+        )}
+        {overlayMode === "hvac" && output.hvac_plan && (
+          <MEPOverlay mep={output.hvac_plan} scale={scale} color="#10b981" runColor="#059669" />
+        )}
 
         {/* Dimensions */}
         {showDimensions && fp.dimensions.map((dim, i) => (

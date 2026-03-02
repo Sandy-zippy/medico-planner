@@ -12,10 +12,13 @@ import {
   ArrowLeft, Upload, Sparkles, Loader2, FileText,
   Building2, MapPin, Maximize2, Shield, Trash2,
   Brain, RefreshCw, ChevronLeft, ChevronRight,
+  Download, FileDown, Pencil,
 } from "lucide-react";
 import { PROJECT_STATUS_COLORS, getClinicLabel, getProvinceCode } from "@/lib/constants";
 import { OutputRenderer } from "@/components/project/output-renderer";
-import type { Project, Generation } from "@/types";
+import type { RoomUpdates } from "@/components/project/room-editor";
+import type { Project, Generation, OutputJSON } from "@/types";
+import { applyRoomPatch } from "@/lib/layout-editor";
 import { toast } from "sonner";
 
 const PROGRESS_MESSAGES = [
@@ -47,6 +50,9 @@ export function ProjectDetail({
     initialGenerations[0]?.id ?? ""
   );
   const [sidebarOpen, setSidebarOpen] = useState(!initialGenerations.length);
+  const [exporting, setExporting] = useState<'pdf' | 'dxf' | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -140,6 +146,79 @@ export function ProjectDetail({
     }, 2000);
   };
 
+  const handleExportPDF = async () => {
+    if (!activeGeneration?.output_json) return;
+    setExporting('pdf');
+    try {
+      const { exportProjectPDF } = await import('@/lib/pdf-export');
+      const blob = await exportProjectPDF(activeGeneration.output_json, project);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${project.clinic_type}-v${activeGeneration.version}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('PDF exported');
+    } catch {
+      toast.error('PDF export failed');
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportDXF = async () => {
+    if (!activeGeneration?.output_json?.floor_plan) return;
+    setExporting('dxf');
+    try {
+      const { exportProjectDXF } = await import('@/lib/dxf-export');
+      const blob = exportProjectDXF(activeGeneration.output_json.floor_plan);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${project.clinic_type}-v${activeGeneration.version}.dxf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('DXF exported');
+    } catch {
+      toast.error('DXF export failed');
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleRoomEdit = async (updates: RoomUpdates) => {
+    if (!activeGeneration) return;
+    setSaving(true);
+    try {
+      const patched = applyRoomPatch(activeGeneration.output_json, {
+        roomNumber: updates.roomNumber,
+        roomName: updates.roomName,
+        width: updates.width,
+        depth: updates.depth,
+        finishCode: updates.finishCode,
+      });
+
+      const res = await fetch(`/api/generations/${activeGeneration.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ output_json: patched }),
+      });
+
+      if (!res.ok) throw new Error('Save failed');
+      const updated = await res.json();
+
+      // Update local state
+      setGenerations(prev =>
+        prev.map(g => g.id === updated.id ? { ...g, output_json: updated.output_json } : g)
+      );
+      toast.success('Room updated');
+    } catch {
+      toast.error('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
@@ -205,6 +284,26 @@ export function ProjectDetail({
             {sidebarOpen ? <ChevronLeft className="w-3.5 h-3.5 mr-1" /> : <ChevronRight className="w-3.5 h-3.5 mr-1" />}
             {sidebarOpen ? "Hide" : "Details"}
           </Button>
+          {activeGeneration && (
+            <>
+              <Button
+                variant={editMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setEditMode(!editMode)}
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1" />
+                {editMode ? "Editing" : "Edit"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exporting === 'pdf'}>
+                {exporting === 'pdf' ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportDXF} disabled={exporting === 'dxf'}>
+                {exporting === 'dxf' ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileDown className="w-3.5 h-3.5 mr-1" />}
+                DXF
+              </Button>
+            </>
+          )}
           <Button size="sm" onClick={handleGenerate} disabled={generating}>
             {generating ? (
               <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Generating...</>
@@ -366,7 +465,12 @@ export function ProjectDetail({
               </CardContent>
             </Card>
           ) : activeGeneration ? (
-            <OutputRenderer generation={activeGeneration} />
+            <OutputRenderer
+              generation={activeGeneration}
+              editMode={editMode}
+              onRoomEdit={handleRoomEdit}
+              saving={saving}
+            />
           ) : (
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-16">

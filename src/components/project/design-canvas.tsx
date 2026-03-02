@@ -2,11 +2,13 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { Loader2, LayoutGrid, Box, Palette, MapPin, Cpu, Ruler, X } from "lucide-react";
+import { Loader2, LayoutGrid, Box, Palette, MapPin, Cpu, Ruler, X, Zap, Droplets, Wind, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FloorPlanSVG, FINISH_PALETTE, CORRIDOR_FILL, ZONE_PALETTE, WALL_STYLES, WALL_THICKNESS_PX } from "./floor-plan-svg";
 import type { OverlayMode } from "./floor-plan-svg";
 import { RoomInspector } from "./room-inspector";
+import { RoomEditor } from "./room-editor";
+import type { RoomUpdates } from "./room-editor";
 import type { OutputJSON } from "@/types";
 
 const Scene3DTab = dynamic(
@@ -27,9 +29,19 @@ const overlayOptions: { value: OverlayMode; icon: typeof Palette; label: string 
   { value: "finishes", icon: Palette, label: "Finishes" },
   { value: "zones", icon: MapPin, label: "Zones" },
   { value: "equipment", icon: Cpu, label: "Equipment" },
+  { value: "electrical", icon: Zap, label: "Electrical" },
+  { value: "plumbing", icon: Droplets, label: "Plumbing" },
+  { value: "hvac", icon: Wind, label: "HVAC" },
 ];
 
-export function DesignCanvas({ output }: { output: OutputJSON }) {
+interface DesignCanvasProps {
+  output: OutputJSON;
+  editMode?: boolean;
+  onRoomEdit?: (updates: RoomUpdates) => void;
+  saving?: boolean;
+}
+
+export function DesignCanvas({ output, editMode = false, onRoomEdit, saving = false }: DesignCanvasProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("plan");
   const [overlayMode, setOverlayMode] = useState<OverlayMode>("finishes");
   const [showDimensions, setShowDimensions] = useState(true);
@@ -232,13 +244,26 @@ export function DesignCanvas({ output }: { output: OutputJSON }) {
         </div>
       </div>
 
-      {/* Room inspector panel */}
+      {/* Room inspector / editor panel */}
       {selectedRoom && (
-        <RoomInspector
-          roomNumber={selectedRoom}
-          output={output}
-          onClose={() => setSelectedRoom(null)}
-        />
+        editMode && onRoomEdit ? (
+          <RoomEditor
+            roomNumber={selectedRoom}
+            output={output}
+            onClose={() => setSelectedRoom(null)}
+            onSave={(updates) => {
+              onRoomEdit(updates);
+              setSelectedRoom(null);
+            }}
+            saving={saving}
+          />
+        ) : (
+          <RoomInspector
+            roomNumber={selectedRoom}
+            output={output}
+            onClose={() => setSelectedRoom(null)}
+          />
+        )
       )}
     </div>
   );

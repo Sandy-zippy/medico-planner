@@ -2,7 +2,7 @@ import type {
   OutputJSON, RoomProgramEntry, Adjacency, ComplianceItem, RiskItem,
   CodeAnalysis, ProjectSummary, RoomScheduleEntry, DetailedCodeAnalysis,
   EquipmentItem, DoorScheduleEntry, PlumbingFixture, DrawingListEntry,
-  FinishScheduleEntry, WallType,
+  FinishScheduleEntry, WallType, CoverSheet, CeilingPlan,
 } from '@/types';
 import {
   calculateOccupancy, getProvinceCode, getClinicLabel, getClinicGroup,
@@ -15,6 +15,7 @@ import { getEquipmentForClinicType } from './data/equipment-database';
 import { getFinishSchedule } from './data/finish-specs';
 import { getWallTypesForClinic } from './data/wall-types';
 import { getDrawingList } from './data/drawing-templates';
+import { generateElectricalPlan, generatePlumbingPlan, generateHVACPlan } from './mep-engine';
 import type { RoomConfig } from '@/types';
 
 const ADJACENCY_RULES: Record<string, Adjacency[]> = {
@@ -549,6 +550,111 @@ export function generateDrawingListOutput(clinicType: string): DrawingListEntry[
   return getDrawingList(clinicType);
 }
 
+// ─── Cover Sheet ──────────────────────────────────────────
+
+export function generateCoverSheet(config: {
+  clinic_type: string;
+  province: string;
+  city: string;
+  area_sqft: number;
+  address: string;
+  building_type: string;
+  rooms: RoomScheduleEntry[];
+  drawing_list: DrawingListEntry[];
+}): CoverSheet {
+  const areaM2 = Math.round(config.area_sqft * 0.092903 * 10) / 10;
+  const provinceCode = getProvinceCode(config.province);
+  const codes = [provinceCode];
+  if (config.province === 'ON') codes.push('AODA O.Reg 191/11');
+  if (config.province === 'BC') codes.push('BC Energy Step Code');
+  codes.push('ASHRAE 62.1', 'NFPA 13');
+
+  const buildingTypeLabels: Record<string, string> = {
+    stand_alone: 'Stand Alone', strip_mall: 'Strip Mall',
+    inside_mall: 'Inside Mall', high_rise: 'High Rise',
+  };
+
+  return {
+    project_name: `${getClinicLabel(config.clinic_type)} — ${config.city || config.province}`,
+    address: config.address || `${config.city}, ${config.province}`,
+    building_type: buildingTypeLabels[config.building_type] || config.building_type,
+    project_type: getClinicLabel(config.clinic_type),
+    total_area_sqft: config.area_sqft,
+    total_area_m2: areaM2,
+    room_count: config.rooms.length,
+    applicable_codes: codes,
+    drawing_index: config.drawing_list,
+    owner: 'TBD — Owner',
+    architect: 'TBD — Architect of Record',
+    date: new Date().toISOString().split('T')[0],
+  };
+}
+
+// ─── Reflected Ceiling Plan ──────────────────────────────
+
+export function generateCeilingPlan(
+  rooms: RoomScheduleEntry[],
+  floorPlan: import('@/types').FloorPlanGeometry,
+  ceilingType: string,
+): CeilingPlan {
+  const gridModule = ceilingType === 'drywall' ? 'N/A — Drywall' : "2' x 4' (600 x 1200mm)";
+
+  const ceilingRooms = floorPlan.rooms.map(fpRoom => {
+    const isWet = ['washroom', 'sterilization', 'hydrotherapy', 'kennel'].some(
+      k => fpRoom.room_name.toLowerCase().includes(k)
+    );
+    const roomCeiling: 'tbar' | 'drywall' | 'mixed' =
+      ceilingType === 'drywall' ? 'drywall' :
+      ceilingType === 'mixed' ? (isWet ? 'drywall' : 'tbar') :
+      'tbar';
+
+    const lightFixtures: { x: number; y: number; type: string }[] = [];
+    const lightSpacing = 8;
+    const cols = Math.max(1, Math.floor(fpRoom.width / lightSpacing));
+    const rows = Math.max(1, Math.floor(fpRoom.depth / lightSpacing));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        lightFixtures.push({
+          x: fpRoom.x + (c + 0.5) * (fpRoom.width / cols),
+          y: fpRoom.y + (r + 0.5) * (fpRoom.depth / rows),
+          type: roomCeiling === 'tbar' ? '2x4 LED Troffer' : 'Recessed LED Downlight',
+        });
+      }
+    }
+
+    const diffusers: { x: number; y: number }[] = [];
+    const diffuserCount = Math.max(1, Math.round(fpRoom.area_actual / 200));
+    for (let d = 0; d < diffuserCount; d++) {
+      diffusers.push({
+        x: fpRoom.x + ((d + 0.5) / diffuserCount) * fpRoom.width,
+        y: fpRoom.y + fpRoom.depth * 0.5,
+      });
+    }
+
+    const sprinklers: { x: number; y: number }[] = [];
+    const sprinklerCount = Math.max(1, Math.round(fpRoom.area_actual / 130));
+    for (let s = 0; s < sprinklerCount; s++) {
+      sprinklers.push({
+        x: fpRoom.x + ((s + 0.5) / sprinklerCount) * fpRoom.width,
+        y: fpRoom.y + fpRoom.depth * 0.3,
+      });
+    }
+
+    return {
+      room_number: fpRoom.room_number,
+      room_name: fpRoom.room_name,
+      x: fpRoom.x, y: fpRoom.y, width: fpRoom.width, depth: fpRoom.depth,
+      ceiling_type: roomCeiling,
+      ceiling_height_ft: isWet ? 8.5 : 9,
+      light_fixtures: lightFixtures,
+      diffusers,
+      sprinklers,
+    };
+  });
+
+  return { ceiling_type: ceilingType, grid_module: gridModule, rooms: ceilingRooms };
+}
+
 // ─── Main export ───────────────────────────────────────────
 
 export function generateMockOutput(config: {
@@ -559,6 +665,8 @@ export function generateMockOutput(config: {
   rooms_json: RoomConfig[];
   existing_space?: boolean;
   address?: string;
+  building_type?: string;
+  ceiling_type?: string;
 }): OutputJSON {
   const rooms = config.rooms_json.length > 0 ? config.rooms_json : getDefaultRooms(config.clinic_type);
   const { occupancyLoad, requiredExits, requiredWashrooms, areaM2 } = calculateOccupancy(config.area_sqft, config.clinic_type);
@@ -644,6 +752,35 @@ export function generateMockOutput(config: {
     // Generate 3D scene from floor plan
     if (output.floor_plan) {
       output.scene_3d = generateScene3D(output.floor_plan);
+
+      // Generate ceiling plan
+      output.ceiling_plan = generateCeilingPlan(
+        output.room_schedule!,
+        output.floor_plan,
+        config.ceiling_type ?? 'tbar',
+      );
+
+      // Generate MEP plans
+      output.electrical_plan = generateElectricalPlan(output.floor_plan, output.equipment_schedule!);
+      output.plumbing_plan = generatePlumbingPlan(output.floor_plan, output.equipment_schedule!);
+      output.hvac_plan = generateHVACPlan(
+        output.floor_plan,
+        output.room_schedule!.map(rs => ({ room_name: rs.room_name, area_sqft: rs.area_sqft })),
+      );
+    }
+
+    // Generate cover sheet
+    if (output.drawing_list && output.room_schedule) {
+      output.cover_sheet = generateCoverSheet({
+        clinic_type: config.clinic_type,
+        province: config.province,
+        city: config.city,
+        area_sqft: config.area_sqft,
+        address,
+        building_type: config.building_type ?? 'stand_alone',
+        rooms: output.room_schedule,
+        drawing_list: output.drawing_list,
+      });
     }
   }
 

@@ -6,6 +6,7 @@ import type { Generation } from "@/types";
 
 import { DesignCanvas } from "./design-canvas";
 import { ContextPanels } from "./context-panels";
+import type { RoomUpdates } from "./room-editor";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-50 text-blue-700",
@@ -19,7 +20,14 @@ const priorityColors: Record<string, string> = {
   avoid: "bg-stone-100 text-stone-700",
 };
 
-export function OutputRenderer({ generation }: { generation: Generation }) {
+interface OutputRendererProps {
+  generation: Generation;
+  editMode?: boolean;
+  onRoomEdit?: (updates: RoomUpdates) => void;
+  saving?: boolean;
+}
+
+export function OutputRenderer({ generation, editMode = false, onRoomEdit, saving = false }: OutputRendererProps) {
   const output = generation.output_json;
 
   const complianceMet = output.compliance_checklist.filter(c => c.status === "met").length;
@@ -67,7 +75,7 @@ export function OutputRenderer({ generation }: { generation: Generation }) {
       </div>
 
       {/* Hero: Floor plan / 3D canvas */}
-      <DesignCanvas output={output} />
+      <DesignCanvas output={output} editMode={editMode} onRoomEdit={onRoomEdit} saving={saving} />
 
       {/* Adjacencies — compact visual */}
       {output.adjacencies.length > 0 && (

@@ -53,6 +53,46 @@ export interface OutputJSON {
   drawing_list?: DrawingListEntry[];
   floor_plan?: FloorPlanGeometry;
   scene_3d?: Scene3DData;
+  cover_sheet?: CoverSheet;
+  ceiling_plan?: CeilingPlan;
+  electrical_plan?: MEPLayout;
+  plumbing_plan?: MEPLayout;
+  hvac_plan?: MEPLayout;
+}
+
+export interface CoverSheet {
+  project_name: string;
+  address: string;
+  building_type: string;
+  project_type: string;
+  total_area_sqft: number;
+  total_area_m2: number;
+  room_count: number;
+  applicable_codes: string[];
+  drawing_index: DrawingListEntry[];
+  owner: string;
+  architect: string;
+  date: string;
+}
+
+export interface CeilingPlan {
+  ceiling_type: string;
+  grid_module: string;
+  rooms: CeilingPlanRoom[];
+}
+
+export interface CeilingPlanRoom {
+  room_number: string;
+  room_name: string;
+  x: number;
+  y: number;
+  width: number;
+  depth: number;
+  ceiling_type: 'tbar' | 'drywall' | 'mixed';
+  ceiling_height_ft: number;
+  light_fixtures: { x: number; y: number; type: string }[];
+  diffusers: { x: number; y: number }[];
+  sprinklers: { x: number; y: number }[];
 }
 
 export interface ProjectSummary {
@@ -267,6 +307,8 @@ export interface DrawingListEntry {
 export interface FloorPlanGeometry {
   envelope: { width: number; depth: number; total_area: number };
   corridor: { x: number; y: number; width: number; depth: number };
+  corridor_segments?: { x: number; y: number; width: number; depth: number }[];
+  layout_type?: 'straight' | 'L';
   rooms: FloorPlanRoom[];
   walls: WallSegment[];
   doors: DoorPlacement[];
@@ -353,6 +395,27 @@ export interface Room3DLabel {
   room_number: string;
   room_name: string;
   position: [number, number, number];
+}
+
+// ── MEP Layout Types ─────────────────────────────────────
+
+export interface MEPSymbol {
+  x: number;
+  y: number;
+  type: string;
+  label?: string;
+}
+
+export interface MEPRun {
+  points: { x: number; y: number }[];
+  type: 'hot' | 'cold' | 'waste' | 'circuit' | 'duct';
+}
+
+export interface MEPLayout {
+  symbols: MEPSymbol[];
+  runs: MEPRun[];
+  panel_location?: { x: number; y: number };
+  legend: { symbol: string; description: string }[];
 }
 
 // ── AI Generation Result ──────────────────────────────────
