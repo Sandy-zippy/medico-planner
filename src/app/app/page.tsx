@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,11 +9,8 @@ import { FloorPlanThumbnail } from "@/components/project/floor-plan-thumbnail";
 import type { Project, Generation, FloorPlanGeometry } from "@/types";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Use service client to bypass RLS when no authenticated user
-  const db = user ? supabase : createServiceClient();
+  // Use service client to bypass RLS (no auth required)
+  const db = createServiceClient();
 
   // Fetch projects with their latest completed generation
   const { data: projects } = await db

@@ -1,13 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { LogoutButton } from "@/components/layout/logout-button";
 
 export default async function AccountPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = createServiceClient();
 
-  const { count: projectCount } = await supabase
+  const { count: projectCount } = await db
     .from("projects")
     .select("*", { count: "exact", head: true });
 
@@ -25,16 +23,7 @@ export default async function AccountPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-stone-500">Email</p>
-              <p className="text-sm text-stone-900">{user?.email}</p>
-            </div>
-          </div>
-          <Separator />
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-stone-500">Member since</p>
-              <p className="text-sm text-stone-900">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
-              </p>
+              <p className="text-sm text-stone-900">Guest</p>
             </div>
           </div>
           <Separator />
@@ -51,15 +40,6 @@ export default async function AccountPage() {
               <p className="text-sm text-stone-900">Starter (Free)</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-red-600">Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LogoutButton />
         </CardContent>
       </Card>
     </div>
