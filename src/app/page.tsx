@@ -31,7 +31,7 @@ const features = [
   {
     icon: CheckCircle2,
     title: "Upload & Analyze",
-    description: "Upload existing floor plans and let UNC Architect analyze your current space.",
+    description: "Upload existing floor plans and let Archonek analyze your current space.",
   },
 ];
 
@@ -45,7 +45,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
               <Building2 className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">UNC Architect</span>
+            <span className="font-semibold text-lg tracking-tight">Archonek</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/pricing" className="text-sm text-stone-600 hover:text-stone-900 transition-colors">
@@ -66,7 +66,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 text-sm text-stone-600 mb-8">
             <span className="w-2 h-2 bg-amber-500 rounded-full" />
-            Built for Canadian construction professionals
+            AI-powered architectural planning
           </div>
           <h1 className="font-serif text-5xl sm:text-6xl font-bold tracking-tight text-stone-900 leading-[1.1] mb-6">
             Design-ready construction<br />
@@ -176,9 +176,9 @@ export default function LandingPage() {
             <div className="w-6 h-6 bg-stone-900 rounded flex items-center justify-center">
               <Building2 className="w-3 h-3 text-amber-400" />
             </div>
-            <span>UNC Architect</span>
+            <span>Archonek</span>
           </div>
-          <span>&copy; 2026 UNC Architect. All rights reserved.</span>
+          <span>&copy; 2026 Archonek. All rights reserved.</span>
         </div>
       </footer>
     </div>

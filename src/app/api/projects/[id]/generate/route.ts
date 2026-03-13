@@ -41,6 +41,8 @@ async function generateAndStore(
       rooms_json: project.rooms_json ?? [],
       existing_space: project.existing_space ?? true,
       address: project.address ?? '',
+      building_type: project.building_type ?? 'stand_alone',
+      ceiling_type: project.ceiling_type ?? 'tbar',
     });
 
     // Store completed result
@@ -84,6 +86,7 @@ export async function POST(
   // DEV MODE: use service client when no authenticated user
   const db = user ? supabase : createServiceClient();
 
+  // Always scope by user_id when authenticated
   const query = db.from('projects').select('*').eq('id', id);
   if (user) query.eq('user_id', user.id);
   const { data: project } = await query.single();
@@ -93,6 +96,19 @@ export async function POST(
   }
 
   const typedProject = project as Project;
+
+  // Rate limit: block if there's already a pending/processing generation
+  const { data: activeGen } = await db
+    .from('generations')
+    .select('id')
+    .eq('project_id', id)
+    .in('status', ['pending', 'processing'])
+    .limit(1)
+    .maybeSingle();
+
+  if (activeGen) {
+    return NextResponse.json({ error: 'Generation already in progress' }, { status: 429 });
+  }
 
   // Get current max version
   const { data: latestGen } = await db
@@ -122,7 +138,8 @@ export async function POST(
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Generation insert failed:', error.message);
+      return NextResponse.json({ error: 'Failed to start generation' }, { status: 500 });
     }
 
     // Fire background generation (not awaited)
@@ -143,6 +160,8 @@ export async function POST(
       rooms_json: typedProject.rooms_json ?? [],
       existing_space: typedProject.existing_space ?? true,
       address: typedProject.address ?? '',
+      building_type: typedProject.building_type ?? 'stand_alone',
+      ceiling_type: typedProject.ceiling_type ?? 'tbar',
     });
 
     const { data: generation, error } = await db
@@ -157,7 +176,8 @@ export async function POST(
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Generation insert failed:', error.message);
+      return NextResponse.json({ error: 'Failed to save generation' }, { status: 500 });
     }
 
     // Update project status

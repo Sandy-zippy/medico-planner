@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, LayoutList, Cpu, Palette, DoorOpen, Shield, FileCode, ClipboardList } from "lucide-react";
+import { ChevronDown, LayoutList, Cpu, Palette, DoorOpen, Shield, FileCode, ClipboardList, BookOpen, Grid3x3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { OutputJSON } from "@/types";
 
@@ -69,6 +69,8 @@ export function ContextPanels({ output }: { output: OutputJSON }) {
     });
   };
 
+  const hasCoverSheet = !!output.cover_sheet;
+  const hasCeilingPlan = !!output.ceiling_plan;
   const hasEquipment = (output.equipment_schedule?.length ?? 0) > 0;
   const hasFinishes = (output.finish_schedule?.length ?? 0) > 0 || (output.wall_types?.length ?? 0) > 0;
   const hasDetailedCode = !!output.detailed_code_analysis;
@@ -77,6 +79,87 @@ export function ContextPanels({ output }: { output: OutputJSON }) {
   const actionItems = output.compliance_checklist.filter(c => c.status === "action_required").length;
 
   const panels: PanelConfig[] = [
+    {
+      id: "cover_sheet",
+      label: "Cover Sheet",
+      icon: BookOpen,
+      badge: "Project Info",
+      visible: hasCoverSheet,
+      render: () => {
+        const cs = output.cover_sheet!;
+        return (
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-3 text-xs">
+              <div><span className="text-stone-400">Project:</span> <span className="font-medium">{cs.project_name}</span></div>
+              <div><span className="text-stone-400">Address:</span> <span className="font-medium">{cs.address}</span></div>
+              <div><span className="text-stone-400">Building Type:</span> <span className="font-medium">{cs.building_type}</span></div>
+              <div><span className="text-stone-400">Project Type:</span> <span className="font-medium">{cs.project_type}</span></div>
+              <div><span className="text-stone-400">Area:</span> <span className="font-medium">{cs.total_area_sqft.toLocaleString()} SF / {cs.total_area_m2} m²</span></div>
+              <div><span className="text-stone-400">Rooms:</span> <span className="font-medium">{cs.room_count}</span></div>
+              <div><span className="text-stone-400">Owner:</span> <span className="font-medium">{cs.owner}</span></div>
+              <div><span className="text-stone-400">Architect:</span> <span className="font-medium">{cs.architect}</span></div>
+              <div><span className="text-stone-400">Date:</span> <span className="font-medium">{cs.date}</span></div>
+            </div>
+            <div>
+              <span className="text-xs text-stone-400">Applicable Codes:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {cs.applicable_codes.map((code, i) => (
+                  <Badge key={i} variant="secondary" className="text-[10px]">{code}</Badge>
+                ))}
+              </div>
+            </div>
+            {cs.drawing_index.length > 0 && (
+              <div>
+                <span className="text-xs text-stone-400">Drawing Index:</span>
+                <table className="w-full mt-1 text-xs">
+                  <thead><tr className="text-stone-400 text-left"><th className="pr-3">No.</th><th className="pr-3">Title</th><th>Discipline</th></tr></thead>
+                  <tbody>
+                    {cs.drawing_index.map((d, i) => (
+                      <tr key={i} className="border-t border-stone-50"><td className="pr-3 py-1 font-mono">{d.drawing_number}</td><td className="pr-3">{d.title}</td><td className="text-stone-500">{d.discipline}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "ceiling_plan",
+      label: "Reflected Ceiling Plan",
+      icon: Grid3x3,
+      badge: hasCeilingPlan ? output.ceiling_plan!.ceiling_type.toUpperCase() : "",
+      visible: hasCeilingPlan,
+      render: () => {
+        const cp = output.ceiling_plan!;
+        return (
+          <div className="space-y-3">
+            <div className="flex gap-4 text-xs">
+              <div><span className="text-stone-400">Ceiling System:</span> <span className="font-medium">{cp.ceiling_type === 'tbar' ? 'Suspended ACT (T-Bar)' : cp.ceiling_type === 'drywall' ? 'Drywall' : 'Mixed'}</span></div>
+              <div><span className="text-stone-400">Grid Module:</span> <span className="font-medium">{cp.grid_module}</span></div>
+            </div>
+            <table className="w-full text-xs">
+              <thead><tr className="text-stone-400 text-left border-b border-stone-100">
+                <th className="pr-2 py-1">Room</th><th className="pr-2">Ceiling</th><th className="pr-2">Height</th><th className="pr-2">Lights</th><th className="pr-2">Diffusers</th><th>Sprinklers</th>
+              </tr></thead>
+              <tbody>
+                {cp.rooms.map((r, i) => (
+                  <tr key={i} className="border-t border-stone-50">
+                    <td className="pr-2 py-1"><span className="font-mono text-stone-400 mr-1">{r.room_number}</span>{r.room_name}</td>
+                    <td className="pr-2">{r.ceiling_type === 'tbar' ? 'ACT' : r.ceiling_type === 'drywall' ? 'GWB' : 'Mixed'}</td>
+                    <td className="pr-2">{r.ceiling_height_ft}&apos;</td>
+                    <td className="pr-2">{r.light_fixtures.length}</td>
+                    <td className="pr-2">{r.diffusers.length}</td>
+                    <td>{r.sprinklers.length}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      },
+    },
     {
       id: "rooms",
       label: "Room Schedule",

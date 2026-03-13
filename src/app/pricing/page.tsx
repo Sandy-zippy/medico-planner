@@ -65,7 +65,7 @@ export default function PricingPage() {
             <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
               <Building2 className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">UNC Architect</span>
+            <span className="font-semibold text-lg tracking-tight">Archonek</span>
           </Link>
           <Link href="/login">
             <Button size="sm">Get Started</Button>
@@ -129,7 +129,7 @@ export default function PricingPage() {
 
       <footer className="border-t border-stone-100 py-8">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-stone-400">
-          &copy; 2026 UNC Architect. All rights reserved.
+          &copy; 2026 Archonek. All rights reserved.
         </div>
       </footer>
     </div>

@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // DEV MODE: use service client (bypasses RLS) when no authenticated user
+  // Use service client to bypass RLS when no authenticated user
   const db = user ? supabase : createServiceClient();
 
   // Fetch projects with their latest completed generation

@@ -20,6 +20,8 @@ import {
   generatePlumbingLegend,
   generateScopeOfWork,
   generateDrawingListOutput,
+  generateCoverSheet,
+  generateCeilingPlan,
 } from './mock-engine';
 import { generateFloorPlanLayout } from './floor-plan-engine';
 import { generateScene3D } from './scene-3d-engine';
@@ -34,6 +36,8 @@ export interface GenerationConfig {
   rooms_json: RoomConfig[];
   existing_space?: boolean;
   address?: string;
+  building_type?: string;
+  ceiling_type?: string;
 }
 
 /**
@@ -51,6 +55,8 @@ export async function generateOutput(config: GenerationConfig): Promise<OutputJS
       rooms_json: config.rooms_json,
       existing_space: config.existing_space ?? true,
       address: config.address ?? '',
+      building_type: config.building_type,
+      ceiling_type: config.ceiling_type,
     });
   }
 
@@ -149,9 +155,28 @@ async function generateWithAIPipeline(config: GenerationConfig): Promise<OutputJ
       config.clinic_type,
     );
 
-    // ── Phase 4: 3D Scene ──
+    // ── Phase 4: 3D Scene + Ceiling Plan ──
     if (output.floor_plan) {
       output.scene_3d = generateScene3D(output.floor_plan);
+      output.ceiling_plan = generateCeilingPlan(
+        output.room_schedule!,
+        output.floor_plan,
+        config.ceiling_type ?? 'tbar',
+      );
+    }
+
+    // ── Phase 5: Cover Sheet ──
+    if (output.drawing_list && output.room_schedule) {
+      output.cover_sheet = generateCoverSheet({
+        clinic_type: config.clinic_type,
+        province: config.province,
+        city: config.city,
+        area_sqft: config.area_sqft,
+        address,
+        building_type: config.building_type ?? 'stand_alone',
+        rooms: output.room_schedule,
+        drawing_list: output.drawing_list,
+      });
     }
   }
 

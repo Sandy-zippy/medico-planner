@@ -12,6 +12,13 @@ export interface Project {
   upload_urls: string[];
   existing_space: boolean;
   address: string;
+  building_type: string;
+  ceiling_type: string;
+  soundproof: boolean;
+  logo_url: string;
+  inspiration_urls: string[];
+  plumbing_fixtures: Record<string, number>;
+  equipment_notes: string;
   status: 'draft' | 'in_progress' | 'completed';
   created_at: string;
   updated_at: string;
@@ -53,6 +60,43 @@ export interface OutputJSON {
   drawing_list?: DrawingListEntry[];
   floor_plan?: FloorPlanGeometry;
   scene_3d?: Scene3DData;
+  cover_sheet?: CoverSheet;
+  ceiling_plan?: CeilingPlan;
+}
+
+export interface CoverSheet {
+  project_name: string;
+  address: string;
+  building_type: string;
+  project_type: string;
+  total_area_sqft: number;
+  total_area_m2: number;
+  room_count: number;
+  applicable_codes: string[];
+  drawing_index: DrawingListEntry[];
+  owner: string;
+  architect: string;
+  date: string;
+}
+
+export interface CeilingPlan {
+  ceiling_type: string;
+  grid_module: string;
+  rooms: CeilingPlanRoom[];
+}
+
+export interface CeilingPlanRoom {
+  room_number: string;
+  room_name: string;
+  x: number;
+  y: number;
+  width: number;
+  depth: number;
+  ceiling_type: 'tbar' | 'drywall' | 'mixed';
+  ceiling_height_ft: number;
+  light_fixtures: { x: number; y: number; type: string }[];
+  diffusers: { x: number; y: number }[];
+  sprinklers: { x: number; y: number }[];
 }
 
 export interface ProjectSummary {

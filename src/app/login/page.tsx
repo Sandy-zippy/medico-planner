@@ -59,7 +59,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 bg-stone-900 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="font-semibold text-xl tracking-tight">UNC Architect</span>
+            <span className="font-semibold text-xl tracking-tight">Archonek</span>
           </Link>
         </div>
 

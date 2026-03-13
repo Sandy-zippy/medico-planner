@@ -30,7 +30,7 @@ export function AppNav({ email }: { email: string }) {
           <div className="w-7 h-7 bg-stone-900 rounded-lg flex items-center justify-center">
             <Building2 className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <span className="font-semibold tracking-tight">UNC Architect</span>
+          <span className="font-semibold tracking-tight">Archonek</span>
         </Link>
 
         <DropdownMenu>

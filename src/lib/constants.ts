@@ -1,16 +1,46 @@
+export const BUILDING_TYPES = [
+  { value: 'stand_alone', label: 'Stand Alone' },
+  { value: 'strip_mall', label: 'Strip Mall' },
+  { value: 'inside_mall', label: 'Inside Mall' },
+  { value: 'high_rise', label: 'High Rise' },
+] as const;
+
+export const CEILING_TYPES = [
+  { value: 'tbar', label: 'T-Bar (Suspended ACT)' },
+  { value: 'drywall', label: 'Drywall' },
+  { value: 'mixed', label: 'Mixed (T-Bar + Drywall)' },
+] as const;
+
+export const PROJECT_TYPE_CATEGORIES = [
+  { value: 'healthcare', label: 'Healthcare / Clinics' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'office', label: 'Office' },
+  { value: 'retail', label: 'Retail' },
+  { value: 'residential', label: 'Residential' },
+] as const;
+
 export const CLINIC_TYPES = [
-  { value: 'dental', label: 'Dental Clinic', group: 'D' },
-  { value: 'optometry', label: 'Optometry Clinic', group: 'D' },
-  { value: 'veterinary', label: 'Veterinary Clinic', group: 'D' },
-  { value: 'physiotherapy', label: 'Physiotherapy Clinic', group: 'D' },
-  { value: 'medical_office', label: 'Medical Office', group: 'D' },
-  { value: 'pharmacy', label: 'Pharmacy', group: 'E' },
-  { value: 'daycare', label: 'Daycare Center', group: 'A2' },
-  { value: 'yoga_studio', label: 'Yoga / Pilates Studio', group: 'A2' },
-  { value: 'restaurant', label: 'Restaurant / Café', group: 'A2' },
-  { value: 'retail', label: 'Retail Store', group: 'E' },
-  { value: 'law_office', label: 'Law Firm / Accounting Office', group: 'D' },
-  { value: 'tech_office', label: 'Tech Startup Office', group: 'D' },
+  // Healthcare / Clinics
+  { value: 'dental', label: 'Dental Clinic', group: 'D', category: 'healthcare' },
+  { value: 'optometry', label: 'Optometry Clinic', group: 'D', category: 'healthcare' },
+  { value: 'veterinary', label: 'Veterinary Clinic', group: 'D', category: 'healthcare' },
+  { value: 'physiotherapy', label: 'Physiotherapy Clinic', group: 'D', category: 'healthcare' },
+  { value: 'medical_office', label: 'Medical Office', group: 'D', category: 'healthcare' },
+  { value: 'pharmacy', label: 'Pharmacy', group: 'E', category: 'healthcare' },
+  // Commercial
+  { value: 'restaurant', label: 'Restaurant / Café', group: 'A2', category: 'commercial' },
+  { value: 'daycare', label: 'Daycare Center', group: 'A2', category: 'commercial' },
+  { value: 'yoga_studio', label: 'Yoga / Pilates Studio', group: 'A2', category: 'commercial' },
+  // Office
+  { value: 'law_office', label: 'Law Firm / Accounting Office', group: 'D', category: 'office' },
+  { value: 'tech_office', label: 'Tech Startup Office', group: 'D', category: 'office' },
+  { value: 'general_office', label: 'General Office', group: 'D', category: 'office' },
+  // Retail
+  { value: 'retail', label: 'Retail Store', group: 'E', category: 'retail' },
+  { value: 'showroom', label: 'Showroom', group: 'E', category: 'retail' },
+  // Residential
+  { value: 'condo_unit', label: 'Condo Unit', group: 'C', category: 'residential' },
+  { value: 'apartment', label: 'Apartment', group: 'C', category: 'residential' },
 ] as const;
 
 export const PROVINCES = [

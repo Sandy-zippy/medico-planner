@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Plus, X, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { CLINIC_TYPES, PROVINCES, BUDGET_RANGES, TIMELINES, calculateOccupancy } from "@/lib/constants";
+import { CLINIC_TYPES, PROVINCES, BUDGET_RANGES, TIMELINES, BUILDING_TYPES, CEILING_TYPES, calculateOccupancy } from "@/lib/constants";
 import { getDefaultRooms } from "@/lib/room-templates";
+import { FileUpload } from "@/components/ui/file-upload";
 import type { RoomConfig } from "@/types";
 
 export default function NewProjectPage() {
@@ -28,6 +29,14 @@ export default function NewProjectPage() {
   const [notes, setNotes] = useState("");
   const [existingSpace, setExistingSpace] = useState(false);
   const [address, setAddress] = useState("");
+  const [buildingType, setBuildingType] = useState("");
+  const [ceilingType, setCeilingType] = useState("tbar");
+  const [soundproof, setSoundproof] = useState(false);
+  const [plumbingFixtures, setPlumbingFixtures] = useState("");
+  const [equipmentNotes, setEquipmentNotes] = useState("");
+  const [floorPlanUrls, setFloorPlanUrls] = useState<string[]>([]);
+  const [logoUrl, setLogoUrl] = useState<string[]>([]);
+  const [inspirationUrls, setInspirationUrls] = useState<string[]>([]);
 
   const area = parseInt(areaSqft) || 0;
   const occupancy = area > 0 && clinicType ? calculateOccupancy(area, clinicType) : null;
@@ -55,7 +64,7 @@ export default function NewProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clinicType || !province || !areaSqft || !budgetRange || !timeline) return;
+    if (!clinicType || !province || !areaSqft || !budgetRange || !timeline || !buildingType) return;
 
     setLoading(true);
 
@@ -73,6 +82,14 @@ export default function NewProjectPage() {
         notes,
         existing_space: existingSpace,
         address,
+        building_type: buildingType,
+        ceiling_type: ceilingType,
+        soundproof,
+        plumbing_fixtures: plumbingFixtures ? { count: parseInt(plumbingFixtures) || 0 } : {},
+        equipment_notes: equipmentNotes,
+        upload_urls: floorPlanUrls,
+        logo_url: logoUrl[0] || null,
+        inspiration_urls: inspirationUrls,
         status: "draft",
       }),
     });
@@ -94,19 +111,19 @@ export default function NewProjectPage() {
       </Link>
 
       <h1 className="text-2xl font-bold tracking-tight text-stone-900 mb-2">New Project</h1>
-      <p className="text-sm text-stone-500 mb-8">Define your clinic space requirements.</p>
+      <p className="text-sm text-stone-500 mb-8">Define your space requirements and generate a full construction document package.</p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Clinic Type & Location */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Project Details</CardTitle>
-            <CardDescription>Basic information about your clinic space</CardDescription>
+            <CardDescription>Basic information about your project</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Clinic Type *</Label>
+                <Label>Project Type *</Label>
                 <Select value={clinicType} onValueChange={handleClinicTypeChange}>
                   <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
                   <SelectContent>
@@ -123,6 +140,30 @@ export default function NewProjectPage() {
                   <SelectContent>
                     {PROVINCES.map(p => (
                       <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Building Type *</Label>
+                <Select value={buildingType} onValueChange={setBuildingType}>
+                  <SelectTrigger><SelectValue placeholder="Select building type..." /></SelectTrigger>
+                  <SelectContent>
+                    {BUILDING_TYPES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Ceiling Type</Label>
+                <Select value={ceilingType} onValueChange={setCeilingType}>
+                  <SelectTrigger><SelectValue placeholder="Select ceiling..." /></SelectTrigger>
+                  <SelectContent>
+                    {CEILING_TYPES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -169,6 +210,26 @@ export default function NewProjectPage() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>Address</Label>
+              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address" />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Plumbing Fixtures (count)</Label>
+                <Input
+                  type="number"
+                  value={plumbingFixtures}
+                  onChange={e => setPlumbingFixtures(e.target.value)}
+                  placeholder="e.g. 8"
+                  min={0}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Equipment / Furniture Notes</Label>
+                <Input value={equipmentNotes} onChange={e => setEquipmentNotes(e.target.value)} placeholder="Special equipment or furniture requirements" />
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -177,15 +238,19 @@ export default function NewProjectPage() {
                   onChange={e => setExistingSpace(e.target.checked)}
                   className="rounded border-stone-300"
                 />
-                <Label htmlFor="existing" className="font-normal">This is an existing space (renovation)</Label>
+                <Label htmlFor="existing" className="font-normal">Existing space (renovation)</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="soundproof"
+                  checked={soundproof}
+                  onChange={e => setSoundproof(e.target.checked)}
+                  className="rounded border-stone-300"
+                />
+                <Label htmlFor="soundproof" className="font-normal">Soundproofing required</Label>
               </div>
             </div>
-            {existingSpace && (
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address" />
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -224,7 +289,7 @@ export default function NewProjectPage() {
                 <CardDescription>
                   {rooms.length > 0
                     ? `${totalProgrammedArea.toLocaleString()} SF programmed — ${circulationPercent}% circulation`
-                    : "Select a clinic type above to load default rooms"}
+                    : "Select a project type above to load default rooms"}
                 </CardDescription>
               </div>
               <Button type="button" variant="outline" size="sm" onClick={addRoom}>
@@ -235,7 +300,7 @@ export default function NewProjectPage() {
           <CardContent>
             {rooms.length === 0 ? (
               <p className="text-sm text-stone-400 text-center py-8">
-                Select a clinic type to auto-populate rooms, or add rooms manually.
+                Select a project type to auto-populate rooms, or add rooms manually.
               </p>
             ) : (
               <div className="space-y-3">
@@ -278,6 +343,63 @@ export default function NewProjectPage() {
                 Consider reducing room sizes.
               </div>
             )}
+
+            {/* Feasibility Check */}
+            {area > 0 && rooms.length > 0 && totalProgrammedArea <= area && (
+              <div className={`mt-4 p-3 text-sm rounded-lg ${
+                parseInt(circulationPercent) < 15
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : parseInt(circulationPercent) < 25
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-green-50 text-green-700 border border-green-200"
+              }`}>
+                <div className="font-medium mb-1">
+                  {parseInt(circulationPercent) < 15
+                    ? "Feasibility Warning — Program Too Tight"
+                    : parseInt(circulationPercent) < 25
+                    ? "Feasibility Caution — Circulation Is Tight"
+                    : "Feasibility OK — Adequate Circulation"}
+                </div>
+                <div>
+                  {circulationArea.toLocaleString()} SF ({circulationPercent}%) available for corridors, walls, and mechanical.
+                  {parseInt(circulationPercent) < 15 && " Minimum 15% needed. Reduce room sizes or remove low-priority spaces."}
+                  {parseInt(circulationPercent) >= 15 && parseInt(circulationPercent) < 25 && " 25-30% is typical for healthcare and commercial."}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* File Uploads */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Uploads</CardTitle>
+            <CardDescription>Floor plans, branding, and inspiration images</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FileUpload
+              label="Floor Plans (PDF/Image)"
+              category="floorplan"
+              accept=".pdf,.png,.jpg,.jpeg,.dwg"
+              multiple
+              urls={floorPlanUrls}
+              onUrlsChange={setFloorPlanUrls}
+            />
+            <FileUpload
+              label="Logo / Branding"
+              category="logo"
+              accept=".png,.jpg,.jpeg,.svg"
+              urls={logoUrl}
+              onUrlsChange={setLogoUrl}
+            />
+            <FileUpload
+              label="Inspiration Images"
+              category="inspiration"
+              accept=".png,.jpg,.jpeg"
+              multiple
+              urls={inspirationUrls}
+              onUrlsChange={setInspirationUrls}
+            />
           </CardContent>
         </Card>
 
@@ -304,7 +426,7 @@ export default function NewProjectPage() {
           </Link>
           <Button
             type="submit"
-            disabled={loading || !clinicType || !province || !areaSqft || !budgetRange || !timeline}
+            disabled={loading || !clinicType || !province || !areaSqft || !budgetRange || !timeline || !buildingType}
           >
             {loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</>
